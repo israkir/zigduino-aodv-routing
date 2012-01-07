@@ -156,18 +156,21 @@ void rx_task ()
     
     // Get the aodv msg type 
     type = get_msg_type(local_rx_buf);
-    if (type == 0){//normal msg
+    if (type == 0){ //normal msg
       unpack_aodv_msg (local_rx_buf, &aodvmsg, rxmsg);
       printf("\r\ntype = %d, src = %d, nexthop = %d, dest = %d, length = %d, msg = %s\r\n", 
         aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.length, aodvmsg.msg);
       //pass_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg);
 
       if(aodvmsg.next_hop == aodv_id){
+        // this AODV msg is for this node, so process it!
         if(aodvmsg.dest == aodv_id){
+          // this node is destination, so print received packet
           printf("!!!!get msg!!!!\r\n");
           printf("type = %d, src = %d, nexthop = %d, dest = %d, length = %d, msg = %s\r\n", 
             aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.length, aodvmsg.msg);
         }else{
+          // this node is not destination, so send it to neighbor
           if((next_hop = find_next_hop(aodvmsg.dest)) != 0){
             printf("sendmsg to %d\r\n", next_hop);
             repack_forward_msg(local_rx_buf, aodvmsg, next_hop);
@@ -180,25 +183,44 @@ void rx_task ()
             aodvrreq.dest = aodvmsg.dest;
             aodvrreq.lifespan = 10;
             aodvrreq.hop_count = 1;
-
+            // set flag for tx_task, so tx_task can broadcast!
             RREQ = &aodvrreq;
-
             broadcast_id++;
           }
         }
       }
-    }else if(type == 1){//RREQ
-        unpack_aodv_msg(local_rx_buf, &aodvmsg, rxmsg);
+    } else if(type == 1) { // RREQ
+        unpack_aodv_RREQ(local_rx_buf, &aodvrreq);
+        // create inverse routing entry
+        add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.broadcast_id, 
+          aodvrreq.hop_count, rfRxInfo.rssi);
         if (aodvmsg.dest == aodv_id) {
-            // TODO: this node is destination, so RREP!
+          // this node is destination, so RREP!
+          aodvmsg.type = 2;
+          aodvmsg.src = aodvrreq.src;
+          aodvmsg.dest = aodvrreq.dest;
+          aodvmsg.next_hop = rfRxInfo.srcAddr;
+          aodvmsg.length = 1;
+          aodvmsg.msg[0] = broadcast_id;
+          RREQ = NULL;
+          RREP = &aodvmsg;
         } else {
-            // this node is not destination, so propagate RREQ!
+          // this node is not destination, so propagate RREQ!
+          RREP = NULL;
+          aodvrreq.lifespan -= 1;
+          if (aodvrreq.lifespan == 0) {
+            // --------------------------------------------------------
+            // TODO: RERR to the source, so it can initiate a new RREQ!
+            // --------------------------------------------------------
+          } else {
+            aodvrreq.hop_count += 1;
+            RREQ = &aodvrreq;
+          }
         }
-    }else if(type == 2){//RREP
+    } else if(type == 2) { // RREP
       unpack_aodv_msg (local_rx_buf, &aodvmsg, rxmsg);
       printf("type = %d, src = %d, nexthop = %d, dest = %d, length = %d, msg = %s\r\n", 
         aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.length, aodvmsg.msg);
-
 
       // update routing table for this node
       update_routing_entry(aodvmsg.dest, aodvmsg.next_hop, rxmsg[0], rfRxInfo.rssi);
@@ -207,12 +229,12 @@ void rx_task ()
       if (aodvmsg.src != aodv_id) {
         aodvmsg.next_hop = aodv_id;
         RREP = &aodvmsg;
-      }
-      else {
+      } else {
         RREP = NULL;
       }
-    }else if(type == 3){//RERR
-    }else if(type == 4){//RACK (special RREP)
+    } else if(type == 3) { //RERR
+      // TODO: implement this!
+    } else if(type == 4) { //RACK (special RREP)
       unpack_aodv_RREQ (local_rx_buf, &aodvrreq);
       printf("\r\ntype = %d, broadcast_id = %d, src = %d, dest = %d, lifespan = %d, hop_count = %d\r\n", 
         aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.dest, aodvrreq.lifespan, aodvrreq.hop_count);
@@ -276,7 +298,8 @@ void tx_task ()
       aodvrreq.hop_count = 1;
 
       pack_aodv_RREQ(tx_buf, aodvrreq);
-      printf("txpacket type = %d, broadcast_id = %d, dest = %d, lifespan = %d, hop_count = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[3], tx_buf[4], tx_buf[5]);
+      printf("txpacket type = %d, broadcast_id = %d, dest = %d, lifespan = %d, hop_count = %d\r\n", 
+        tx_buf[0], tx_buf[1], tx_buf[3], tx_buf[4], tx_buf[5]);
 
       send_packet(tx_buf, sizeof(tx_buf));
     }
@@ -291,7 +314,8 @@ void tx_task ()
       uint8_t dest;
       if ((dest = find_next_hop(aodvmsg.src)) != 0) {
         pack_aodv_msg(tx_buf, aodvmsg);
-        printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
+        printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
+          tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
 
         send_packet(tx_buf, sizeof(tx_buf));
       }
@@ -315,7 +339,8 @@ void tx_task ()
       if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
 
         pack_aodv_msg(tx_buf, aodvmsg);
-        printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
+        printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
+          tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
         // Build the TX packet
         rfTxInfo.pPayload = tx_buf;
         rfTxInfo.length = aodvmsg.length+5;
