@@ -1,26 +1,3 @@
-/******************************************************************************
- *  Nano-RK, a real-time operating system for sensor networks.
- *  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
- *  All rights reserved.
- *
- *  This is the Open Source Version of Nano-RK included as part of a Dual
- *  Licensing Model. If you are unsure which license to use please refer to:
- *  http://www.nanork.org/nano-RK/wiki/Licensing
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, version 2.0 of the License.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *******************************************************************************/
-
 #include <nrk.h>
 #include <include.h>
 #include <ulib.h>
@@ -160,17 +137,17 @@ void rx_task ()
     type = get_msg_type(local_rx_buf);
     if (type == 0){ //normal msg
       unpack_aodv_msg (local_rx_buf, &aodvmsg, rxmsg);
-      printf("\r\ntype = %d, src = %d, nexthop = %d, dest = %d, length = %d, msg = %s\r\n", 
-        aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.length, aodvmsg.msg);
+      printf("\r\ntype = %d, src = %d, nexthop = %d, dest = %d, msg_len = %d, msg = %s\r\n", 
+        aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.msg_len, aodvmsg.msg);
       //pass_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg);
 
       if(aodvmsg.next_hop == node_addr){
         // this AODV msg is for this node, so process it!
         if(aodvmsg.dest == node_addr){
           // this node is destination, so print received packet
-          printf("!!!!get msg!!!!\r\n");
-          printf("type = %d, src = %d, nexthop = %d, dest = %d, length = %d, msg = %s\r\n", 
-            aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.length, aodvmsg.msg);
+          printf("!!!!got msg!!!!\r\n");
+          printf("\r\ntype = %d, src = %d, nexthop = %d, dest = %d, msg_len = %d, msg = %s\r\n", 
+            aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.msg_len, aodvmsg.msg);
         }else{
           // this node is not destination, so send it to neighbor
           if((next_hop = find_next_hop(aodvmsg.dest)) != 0){
@@ -201,10 +178,10 @@ void rx_task ()
         }
       }
     } else if(type == 1) { // RREQ
-        unpack_aodv_RREQ(local_rx_buf, &aodvrreq);
+        unpack_aodv_rreq(local_rx_buf, &aodvrreq);
         // if received rreq is valid, then process it!
         // valid: this node did not received a RREQ with the same broadcast_id & source addr
-        if (check_rreq_is_valid() != -1) {
+        if (check_rreq_is_valid(&aodvrreq) != -1) {
           // create inverse routing entry
           add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi);         
           // this node neighbor of destination, so RREP!
@@ -241,8 +218,8 @@ void rx_task ()
 
         // TODO: this is for timeout of the reverse route entries
         // renew routing table entries to source and destination
-        // renew_routing_entry(node_addr, aodvrrep.src);
-        // renew_routing_entry(aodvrrep.src, aodvrrep.dest);
+        // renew_routing_entry(aodvrrep.src);
+        // renew_routing_entry(aodvrrep.dest);
         RREQ = NULL;
         RREP = &aodvrrep;
       } else {
@@ -252,20 +229,21 @@ void rx_task ()
     } else if(type == 3) { //RERR
       // TODO: implement this!
     } else if(type == 4) { // RACK (special RREP)
+      /*
       unpack_aodv_rreq (local_rx_buf, &aodvrreq);
-      printf("\r\ntype = %d, broadcast_id = %d, src = %d, dest = %d, lifespan = %d, hop_count = %d\r\n", 
-        aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.dest, aodvrreq.lifespan, aodvrreq.hop_count);
+      printf("\r\ntype = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", 
+        aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
 
       //Update routing table
       //The RACK should always be one hop
-      if (find_next_hop(aodvrreq) == aodvrreq.next_hop) {
+      if (find_next_hop(aodvrack.src) == aodvrack.src) {
         update_routing_entry(aodvrreq.dest, aodvrreq.dest, aodvrreq.broadcast_id, aodvrreq.hop_count, rfRxInfo.rssi);
       }
       else {
         //For first time discovery
         add_routing_entry(aodvrreq.dest, aodvrreq.dest, aodvrreq.broadcast_id, aodvrreq.hop_count, rfRxInfo.rssi);
-      }
-    }else{
+      } */
+    } else {
       nrk_kprintf( PSTR("unknown type\r\n"));
     }
 
@@ -332,7 +310,7 @@ void tx_task ()
       }
       aodvrreq = *RREQ;
       pack_aodv_rreq(tx_buf, aodvrreq);
-      broadcast_packet(tx_buf, sizeof(tx_buf));
+      broadcast_rreq(tx_buf, sizeof(tx_buf));
     }
 
     /*

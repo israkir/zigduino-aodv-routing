@@ -70,8 +70,8 @@ uint8_t getuint_8(){
   return num;
 }
 
-void renew_routing_entry(uint8_t src, uint8_t dest) {
-  uint8_t index = find_index(src, dest);
+void renew_routing_entry(uint8_t dest) {
+  uint8_t index = find_index(dest);
   if (index > -1) {
     routing_table[index].lifespan = MAX_LIFESPAN;
     /*routing_table[index].ssnr2 = 0.5 * (routing_table[table_size].ssnr2 + snr);*/
@@ -110,7 +110,7 @@ uint8_t get_msg_type(uint8_t* rx_buf){
   return rx_buf[0];
 }
 
-void unpack_aodv_RREP(uint8_t* rx_buf, AODV_RREP_INFO* aodvrrep){
+void unpack_aodv_rrep(uint8_t* rx_buf, AODV_RREP_INFO* aodvrrep){
   aodvrrep->type = rx_buf[0];
   aodvrrep->src = rx_buf[1];
   aodvrrep->dest = rx_buf[2];
@@ -119,7 +119,7 @@ void unpack_aodv_RREP(uint8_t* rx_buf, AODV_RREP_INFO* aodvrrep){
   aodvrrep->lifespan = rx_buf[5];
 }
 
-void pack_aodv_RREP(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep){
+void pack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep){
   tx_buf[0] = aodvrrep.type;
   tx_buf[1] = aodvrrep.src;
   tx_buf[2] = aodvrrep.dest;
@@ -128,22 +128,24 @@ void pack_aodv_RREP(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep){
   tx_buf[5] = aodvrrep.lifespan;
 }
 
-void unpack_aodv_RREQ(uint8_t* rx_buf, AODV_RREQ_INFO* aodvrreq){
+void unpack_aodv_rreq(uint8_t* rx_buf, AODV_RREQ_INFO* aodvrreq){
   aodvrreq->type = rx_buf[0];
   aodvrreq->broadcast_id = rx_buf[1];
   aodvrreq->src = rx_buf[2];
-  aodvrreq->dest = rx_buf[3];
-  aodvrreq->lifespan = rx_buf[4];
-  aodvrreq->hop_count = rx_buf[5];
+  aodvrreq->src_seq_num = rx_buf[3];
+  aodvrreq->dest = rx_buf[4];
+  aodvrreq->dest_seq_num = rx_buf[5];
+  aodvrreq->hop_count = rx_buf[6];
 }
 
-void pack_aodv_RREQ(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq){
+void pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq){
   tx_buf[0] = aodvrreq.type;
   tx_buf[1] = aodvrreq.broadcast_id;
   tx_buf[2] = aodvrreq.src;
-  tx_buf[3] = aodvrreq.dest;
-  tx_buf[4] = aodvrreq.lifespan;
-  tx_buf[5] = aodvrreq.hop_count;
+  tx_buf[3] = aodvrreq.src_seq_num;
+  tx_buf[4] = aodvrreq.dest;
+  tx_buf[5] = aodvrreq.dest_seq_num;
+  tx_buf[6] = aodvrreq.hop_count;
 }
 
 void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg){
@@ -151,29 +153,28 @@ void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg){
   aodvmsg->src  = rx_buf[1];
   aodvmsg->next_hop = rx_buf[2];
   aodvmsg->dest = rx_buf[3];
-  aodvmsg->length = rx_buf[4];
+  aodvmsg->msg_len = rx_buf[4];
   aodvmsg->msg = msg;
-  memcpy(msg,rx_buf+5,aodvmsg->length);
+  memcpy(msg, rx_buf+5, aodvmsg->msg_len);
 }
 
 void pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg){
-  printf("\r\npack msg type = %o, src = %o\r\n",aodvmsg.type,aodvmsg.src);
   tx_buf[0] = aodvmsg.type;
   tx_buf[1] = aodvmsg.src;
   tx_buf[2] = aodvmsg.next_hop;
   tx_buf[3] = aodvmsg.dest;
-  tx_buf[4] = aodvmsg.length;
-  memcpy(tx_buf+5, aodvmsg.msg, aodvmsg.length);
+  tx_buf[4] = aodvmsg.msg_len;
+  memcpy(tx_buf+5, aodvmsg.msg, aodvmsg.msg_len);
 }
 
 void repack_forward_msg(uint8_t* buf, AODV_MSG_INFO aodvmsg, uint8_t next_hop){
   buf[2] = next_hop;
 }
 
-uint8_t find_index(uint8_t src, uint8_t dest){
+uint8_t find_index(uint8_t dest){
   uint8_t i;
   for(i = 0; i < table_size; i++){
-    if(routing_table[i].dest == dest && routing_table[i].src == src)
+    if(routing_table[i].dest == dest)
       return i;
   }
   return -1; // did not find in routing table
@@ -212,16 +213,14 @@ void set_routing_table()
 }
 
 void broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
-  uint8_t val;
-
-  printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
+  // printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = length;
   rfTxInfo.destAddr = 0xffff; // broadcast by default
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  //printf( "Sending\r\n" );
+  // printf( "Sending\r\n" );
   if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
   }else{
@@ -232,9 +231,7 @@ void broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
 }
 
 void send_packet(uint8_t *tx_buf, uint8_t length){
-  uint8_t val;
-
-  printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
+  // printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = length;
   rfTxInfo.destAddr = tx_buf[2]; // next_hop
@@ -252,8 +249,6 @@ void send_packet(uint8_t *tx_buf, uint8_t length){
 }
 
 void send_rrep(uint8_t *tx_buf, uint8_t length, uint8_t next_hop){
-  uint8_t val;
-
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = length;
   rfTxInfo.destAddr = next_hop;
@@ -273,13 +268,13 @@ void send_rrep(uint8_t *tx_buf, uint8_t length, uint8_t next_hop){
 
 int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
   if (rreq_buffer_size < RREQ_BUFFER_SIZE) {
-    rreq_buffer[rreq_buffer_size].type = aodvrreq.type;
-    rreq_buffer[rreq_buffer_size].broadcast_id = aodvrreq.broadcast_id;
-    rreq_buffer[rreq_buffer_size].src = aodvrreq.src;
-    rreq_buffer[rreq_buffer_size].src_seq_num = aodvrreq.src_seq_num;
-    rreq_buffer[rreq_buffer_size].dest = aodvrreq.dest;
-    rreq_buffer[rreq_buffer_size].dest_seq_num = aodvrreq.dest_seq_num;
-    rreq_buffer[rreq_buffer_size].hop_count = aodvrreq.hop_count;
+    rreq_buffer[rreq_buffer_size].type = aodvrreq->type;
+    rreq_buffer[rreq_buffer_size].broadcast_id = aodvrreq->broadcast_id;
+    rreq_buffer[rreq_buffer_size].src = aodvrreq->src;
+    rreq_buffer[rreq_buffer_size].src_seq_num = aodvrreq->src_seq_num;
+    rreq_buffer[rreq_buffer_size].dest = aodvrreq->dest;
+    rreq_buffer[rreq_buffer_size].dest_seq_num = aodvrreq->dest_seq_num;
+    rreq_buffer[rreq_buffer_size].hop_count = aodvrreq->hop_count;
     rreq_buffer_size++;
     return 0;
   } else {
@@ -296,7 +291,7 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
   } else {
     int i;
     for (i=0; i<rreq_buffer_size; i++) {
-      if ((rreq_buffer[i].broadcast_id == aodvrreq.broadcast_id) && (rreq_buffer[i].src == aodvrreq.src)) {
+      if ((rreq_buffer[i].broadcast_id == aodvrreq->broadcast_id) && (rreq_buffer[i].src == aodvrreq->src)) {
         return -1;
       } else {
         return 0;

@@ -55,7 +55,7 @@ extern AODV_RREQ_INFO rreq_buffer[];
 int8_t init_aodv();
 uint8_t get_msg_type(uint8_t* rx_buf);
 void unpack_aodv_rreq(uint8_t* rx_buf, AODV_RREQ_INFO* aodvrreq);
-void unpack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep);
+void unpack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO* aodvrrep);
 void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg);
 
 void pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq);
@@ -68,7 +68,7 @@ int8_t add_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, u
 int8_t remove_routing_entry();
 void print_routing_table();
 
-uint8_t find_index(uint8_t src, uint8_t dest);
+uint8_t find_index(uint8_t dest);
 uint8_t find_next_hop(uint8_t dest);
 
 void send_packet(uint8_t *tx_buf, uint8_t length);
@@ -76,7 +76,7 @@ void send_rrep(uint8_t *tx_buf, uint8_t length, uint8_t next_hop);
 void broadcast_rreq(uint8_t *tx_buf, uint8_t length);
 void set_routing_table();
 uint8_t getuint_8();
-void renew_routing_entry(uint8_t dest, uint8_t next_hop);
+void renew_routing_entry(uint8_t dest);
 
 int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq);
 int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq);
