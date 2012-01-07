@@ -87,6 +87,7 @@ void rx_task ()
   AODV_RREQ_INFO aodvrreq;
   AODV_RREP_INFO aodvrrep;
   AODV_RREP_INFO aodvrack;
+  AODV_RERR_INFO aodvrerr;
 
   printf ("rx_task PID=%d\r\n", nrk_get_pid ());
 
