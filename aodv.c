@@ -9,9 +9,12 @@
 #include "my_basic_rf.h"
 
 #define MAX_TABLE_SIZE 32
+#define MAX_LIFESPAN 10
 
 ROUTING_ENTRY routing_table[MAX_TABLE_SIZE];
-uint8_t aodv_id;
+uint8_t node_addr;
+uint8_t node_seq_num = 1;
+uint8_t dest_seq_num = 0;
 uint8_t table_size = 0;
 
 RF_TX_INFO rfTxInfo;
@@ -62,16 +65,11 @@ uint8_t getuint_8(){
   return num;
 }
 
-void update_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, uint8_t hop_count, int8_t snr) {
-  uint8_t index = find_index(dest, next_hop);
-  if (routing_table[index].dest_seq_num < dest_seq_num) {
-    routing_table[index].dest = dest;
-    routing_table[index].next_hop = next_hop;
-    routing_table[index].dest_seq_num = dest_seq_num;
-    routing_table[index].hop_count = hop_count;
-
-    // Update ssnr2
-    routing_table[index].ssnr2 = 0.5 * (routing_table[table_size].ssnr2 + snr);
+void renew_routing_entry(uint8_t src, uint8_t dest) {
+  uint8_t index = find_index(src, dest);
+  if (index > -1) {
+    routing_table[index].lifespan = MAX_LIFESPAN;
+    /*routing_table[index].ssnr2 = 0.5 * (routing_table[table_size].ssnr2 + snr);*/
   }
 }
 
@@ -105,6 +103,24 @@ void print_routing_table(){
 
 uint8_t get_msg_type(uint8_t* rx_buf){
   return rx_buf[0];
+}
+
+void unpack_aodv_RREP(uint8_t* rx_buf, AODV_RREP_INFO* aodvrrep){
+  aodvrrep->type = rx_buf[0];
+  aodvrrep->src = rx_buf[1];
+  aodvrrep->dest = rx_buf[2];
+  aodvrrep->dest_seq_num = rx_buf[3];
+  aodvrrep->hop_count = rx_buf[4];
+  aodvrrep->lifespan = rx_buf[5];
+}
+
+void pack_aodv_RREP(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep){
+  tx_buf[0] = aodvrrep.type;
+  tx_buf[1] = aodvrrep.src;
+  tx_buf[2] = aodvrrep.dest;
+  tx_buf[3] = aodvrrep.dest_seq_num;
+  tx_buf[4] = aodvrrep.hop_count;
+  tx_buf[5] = aodvrrep.lifespan;
 }
 
 void unpack_aodv_RREQ(uint8_t* rx_buf, AODV_RREQ_INFO* aodvrreq){
@@ -149,12 +165,11 @@ void repack_forward_msg(uint8_t* buf, AODV_MSG_INFO aodvmsg, uint8_t next_hop){
   buf[2] = next_hop;
 }
 
-uint8_t find_index(uint8_t dest, uint8_t next_hop){
+uint8_t find_index(uint8_t src, uint8_t dest){
   uint8_t i;
   for(i = 0; i < table_size; i++){
-    if(routing_table[i].dest == dest && routing_table[i].next_hop == next_hop){
+    if(routing_table[i].dest == dest && routing_table[i].src == src)
       return i;
-    }
   }
   return -1; // did not find in routing table
 }
@@ -174,8 +189,8 @@ void set_routing_table()
   uint8_t i, table_size, dest, nexthop, destseq, hopcount;
   nrk_kprintf(PSTR ("Enter id (dont use id 0):\r\n"));
   //id 0 is reserved for the meaning of not exist.
-  aodv_id = getuint_8();
-  printf("id = %d\r\n", aodv_id);
+  node_addr = getuint_8();
+  printf("id = %d\r\n", node_addr);
   nrk_kprintf(PSTR ("Enter table size:\r\n"));
   table_size = getuint_8();
   printf("table size = %d\r\n", table_size);
@@ -191,7 +206,7 @@ void set_routing_table()
   print_routing_table();
 }
 
-void broadcast_packet(uint8_t *tx_buf, uint8_t length) {
+void broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
   uint8_t val;
 
   printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
@@ -218,6 +233,25 @@ void send_packet(uint8_t *tx_buf, uint8_t length){
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = length;
   rfTxInfo.destAddr = tx_buf[2]; // next_hop
+  rfTxInfo.cca = 0;
+  rfTxInfo.ackRequest = 1;
+
+  //printf( "Sending\r\n" );
+  if(rf_tx_packet(&rfTxInfo) != 1){
+    nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
+  }else{
+    nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
+  }
+
+  nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+}
+
+void send_rrep(uint8_t *tx_buf, uint8_t length, uint8_t next_hop){
+  uint8_t val;
+
+  rfTxInfo.pPayload = tx_buf;
+  rfTxInfo.length = length;
+  rfTxInfo.destAddr = next_hop;
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 

@@ -46,10 +46,11 @@ void tx_task (void);
 void nrk_create_taskset ();
 
 uint8_t rxmsg[100];
-uint8_t msg[32]; 
+uint8_t msg[32];
 
 RF_TX_INFO rfTxInfo;
 RF_RX_INFO rfRxInfo;
+
 uint8_t tx_buf[RF_MAX_PAYLOAD_SIZE];
 uint8_t rx_buf[RF_MAX_PAYLOAD_SIZE];
 
@@ -57,8 +58,8 @@ nrk_sig_t signal_send_packet;
 
 //TX Flags
 AODV_RREQ_INFO* RREQ = NULL;
-AODV_RREQ_INFO* RACK = NULL;
-AODV_RREQ_INFO* RREP = NULL;
+AODV_RREP_INFO* RACK = NULL;
+AODV_RREP_INFO* RREP = NULL;
 
 uint8_t rf_ok;
 uint8_t broadcast_id = 0;
@@ -76,7 +77,6 @@ void init_srand_seed() {
   light_val = buf;
   nrk_close(fd);
   srand(light_val);
-  printf("ligth_value: %d \r\n", light_val);
 }
 
 int main ()
@@ -107,6 +107,8 @@ void rx_task ()
   uint8_t next_hop;
   AODV_MSG_INFO aodvmsg;
   AODV_RREQ_INFO aodvrreq;
+  AODV_RREP_INFO aodvrrep;
+  AODV_RREP_INFO aodvrack;
 
   printf ("rx_task PID=%d\r\n", nrk_get_pid ());
 
@@ -192,7 +194,7 @@ void rx_task ()
         }
       }
     } else if(type == 1) { // RREQ
-        unpack_aodv_RREQ(local_rx_buf, &aodvrreq);
+        unpack_aodv_rreq(local_rx_buf, &aodvrreq);
         // create inverse routing entry
         add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.broadcast_id, 
           aodvrreq.hop_count, rfRxInfo.rssi);
@@ -220,23 +222,26 @@ void rx_task ()
           }
         }
     } else if(type == 2) { // RREP
-      unpack_aodv_msg (local_rx_buf, &aodvmsg, rxmsg);
-      printf("type = %d, src = %d, nexthop = %d, dest = %d, length = %d, msg = %s\r\n", 
-        aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.length, aodvmsg.msg);
+      unpack_aodv_rrep (local_rx_buf, &aodvrrep);
+      printf("type = %d, src = %d, dest = %d, dest_seq_num = %d, hop_count = %d, lifespan = %d\r\n", 
+        aodvrrep.type, aodvrrep.src, aodvrrep.dest, aodvrrep.dest_seq_num, aodvrrep.hop_count, aodvrrep.lifespan);
 
-      // update routing table for this node
-      update_routing_entry(aodvmsg.dest, aodvmsg.next_hop, rxmsg[0], rfRxInfo.rssi);
+      if (dest_seq_num < aodvrrep.dest_seq_num) {
+        // update the destination sequence number
+        dest_seq_num = aodvrrep.dest_seq_num;
 
-      // should I route?
-      if (aodvmsg.src != node_addr) {
-        RREP = &aodvmsg;
+        // renew routing table entries to source and destination
+        renew_routing_entry(node_addr, aodvrrep.src);
+        renew_routing_entry(aodvrrep.src, aodvrrep.dest);
+
+        RREP = &aodvrrep;
       } else {
         RREP = NULL;
       }
     } else if(type == 3) { //RERR
       // TODO: implement this!
     } else if(type == 4) { //RACK (special RREP)
-      unpack_aodv_RREQ (local_rx_buf, &aodvrreq);
+      unpack_aodv_rreq (local_rx_buf, &aodvrreq);
       printf("\r\ntype = %d, broadcast_id = %d, src = %d, dest = %d, lifespan = %d, hop_count = %d\r\n", 
         aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.dest, aodvrreq.lifespan, aodvrreq.hop_count);
 
@@ -265,11 +270,10 @@ void rx_task ()
 
 void tx_task ()
 {
-  /*uint8_t seq;*/
   AODV_MSG_INFO aodvmsg;
   AODV_RREQ_INFO aodvrreq;
-
-  /*seq = 0;*/
+  AODV_RREP_INFO aodvrrep;
+  AODV_RREP_INFO aodvrack;
 
   signal_send_packet = nrk_rx_signal_get();
   nrk_signal_register(signal_send_packet);	
@@ -285,12 +289,8 @@ void tx_task ()
 
     nrk_event_wait(SIG(signal_send_packet));
 
-    // Build a test msg for the TX packet 
-    //sprintf(msg,"current seq = %d!!!", seq);
-
     // When should I send RACK?
     if () {
-      /*seq++;*/
       //special RREP (RACK)
       aodvrreq.type = 4;
       aodvrreq.broadcast_id = 0;
@@ -298,23 +298,22 @@ void tx_task ()
       aodvrreq.lifespan = 1;
       aodvrreq.hop_count = 1;
 
-      pack_aodv_RREQ(tx_buf, aodvrreq);
+      pack_aodv_rreq(tx_buf, aodvrreq);
       printf("txpacket type = %d, broadcast_id = %d, dest = %d, lifespan = %d, hop_count = %d\r\n", 
         tx_buf[0], tx_buf[1], tx_buf[3], tx_buf[4], tx_buf[5]);
 
       send_packet(tx_buf, sizeof(tx_buf));
     }
 
-    // Either from RREQ or RREP
     if (RREP) {
-      aodvmsg = *RREP;
-      pack_aodv_msg(tx_buf, aodvmsg);
-      send_packet(tx_buf, sizeof(tx_buf));
+      aodvrrep = *RREP;
+      pack_aodv_rrep(tx_buf, aodvrrep);
+      send_rrep(tx_buf, sizeof(tx_buf), find_next_hop(aodvrrep.src));
     }
 
     if (RREQ) {
       aodvrreq = *RREQ;
-      pack_aodv_RREQ(tx_buf, aodvrreq);
+      pack_aodv_rreq(tx_buf, aodvrreq);
       broadcast_packet(tx_buf, sizeof(tx_buf));
     }
 
