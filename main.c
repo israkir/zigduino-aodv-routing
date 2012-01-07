@@ -301,6 +301,7 @@ void tx_task ()
     nrk_event_wait(SIG(signal_send_packet));
 
     // RACK
+    /*
     if () {
       aodvrreq.type = 4;
       aodvrreq.broadcast_id = 0;
@@ -314,19 +315,27 @@ void tx_task ()
 
       send_packet(tx_buf, sizeof(tx_buf));
     }
+    */
 
     if (RREP) {
+      if (strcmp(WHOAMI, "destination") == 0) {
+        node_seq_num++;
+      }
       aodvrrep = *RREP;
       pack_aodv_rrep(tx_buf, aodvrrep);
       send_rrep(tx_buf, sizeof(tx_buf), find_next_hop(aodvrrep.src));
     }
 
     if (RREQ) {
+      if (strcmp(WHOAMI, "source") == 0) {
+        node_seq_num++;
+      }
       aodvrreq = *RREQ;
       pack_aodv_rreq(tx_buf, aodvrreq);
       broadcast_packet(tx_buf, sizeof(tx_buf));
     }
 
+    /*
     if () {
       aodvmsg.dest = node_addr;
       aodvmsg.type = 0;
@@ -355,6 +364,7 @@ void tx_task ()
         //nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
       }
     }
+    */
 
     nrk_led_clr(RFTX_LED);
     nrk_wait_until_next_period();

@@ -34,6 +34,23 @@ SRC += ./my_basic_rf.c
 EXTRAINCDIRS = ./
 # EXTRAINCDIRS += $(ROOT_DIR)/src/net/bmac
 
+ifdef SOURCE
+
+CFLAGS += -DWHOAMI='"source"'
+
+else
+
+ifdef DESTINATION
+
+CFLAGS += -DWHOAMI='"destination"'
+
+else
+
+CFLAGS += -DWHOAMI='"intermediate"'
+
+endif
+
+endif
 
 #  This is where the final compile and download happens
 include $(ROOT_DIR)/include/platform/$(PLATFORM)/common.mk
