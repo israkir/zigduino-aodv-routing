@@ -9,10 +9,14 @@
 #include "my_basic_rf.h"
 
 #define MAX_TABLE_SIZE 32
+#define RREQ_BUFFER_SIZE 2
 
 ROUTING_ENTRY routing_table[MAX_TABLE_SIZE];
+AODV_RREQ_INFO rreq_buffer[RREQ_BUFFER_SIZE];
+
 uint8_t aodv_id;
 uint8_t table_size = 0;
+uint8_t rreq_buffer_size = 0;
 
 RF_TX_INFO rfTxInfo;
 RF_RX_INFO rfRxInfo;
@@ -229,4 +233,39 @@ void send_packet(uint8_t *tx_buf, uint8_t length){
   }
 
   nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+}
+
+
+int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
+  if (rreq_buffer_size < RREQ_BUFFER_SIZE) {
+    rreq_buffer[rreq_buffer_size].type = aodvrreq.type;
+    rreq_buffer[rreq_buffer_size].broadcast_id = aodvrreq.broadcast_id;
+    rreq_buffer[rreq_buffer_size].src = aodvrreq.src;
+    rreq_buffer[rreq_buffer_size].src_seq_num = aodvrreq.src_seq_num;
+    rreq_buffer[rreq_buffer_size].dest = aodvrreq.dest;
+    rreq_buffer[rreq_buffer_size].dest_seq_num = aodvrreq.dest_seq_num;
+    rreq_buffer[rreq_buffer_size].hop_count = aodvrreq.hop_count;
+    rreq_buffer_size++;
+    return 0;
+  } else {
+    printf("ERROR: RREQ_BUFFER_SIZE exceeded!!!");
+    return -1;
+  }
+}
+
+int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
+  // check node received a RREQ with the same broadcast_id & source addr
+  // if it did, return -1 (drop the rreq packet); return 0, otherwise.
+  if (rreq_buffer_size == 0) {
+    return 0;
+  } else {
+    int i;
+    for (i=0; i<rreq_buffer_size; i++) {
+      if ((rreq_buffer[i].broadcast_id == aodvrreq.broadcast_id) && (rreq_buffer[i].src == aodvrreq.src)) {
+        return -1;
+      } else {
+        return 0;
+      }
+    }
+  }
 }
