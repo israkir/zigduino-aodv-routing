@@ -229,7 +229,7 @@ void rx_task ()
       }
     } else if(type == 3) { //RERR
 	
-		unpack_aodv_RERR (local_rx_buf, &aodvrerr);
+		unpack_aodv_rerr (local_rx_buf, &aodvrerr);
 		printf("type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
 	  
 		// delete route that contains broken link from the routing table
