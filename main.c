@@ -208,7 +208,7 @@ void rx_task ()
           // create inverse routing entry
           add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi);         
           // this node neighbor of destination, so RREP!
-          if (aodvrreq.dest == find_next_hop(aodvrreq.dest)) {
+          if ((aodvrreq.dest == find_next_hop(aodvrreq.dest)) || aodvrreq.dest == node_addr) {
             if (dest_seq_num < aodvrreq.dest_seq_num) {
               aodvrrep.type = 2;
               aodvrrep.src = aodvrreq.src;
