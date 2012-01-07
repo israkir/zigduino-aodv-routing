@@ -191,6 +191,26 @@ void set_routing_table()
   print_routing_table();
 }
 
+void broadcast_packet(uint8_t *tx_buf, uint8_t length) {
+  uint8_t val;
+
+  printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
+  rfTxInfo.pPayload = tx_buf;
+  rfTxInfo.length = length;
+  rfTxInfo.destAddr = 0xffff; // broadcast by default
+  rfTxInfo.cca = 0;
+  rfTxInfo.ackRequest = 1;
+
+  //printf( "Sending\r\n" );
+  if(rf_tx_packet(&rfTxInfo) != 1){
+    nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
+  }else{
+    nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
+  }
+
+  nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+}
+
 void send_packet(uint8_t *tx_buf, uint8_t length){
   uint8_t val;
 

@@ -49,6 +49,7 @@ void print_routing_table();
 uint8_t find_index(uint8_t dest, uint8_t next_hop);
 uint8_t find_next_hop(uint8_t dest);
 void send_packet(uint8_t *tx_buf, uint8_t length);
+void broadcast_packet(uint8_t *tx_buf, uint8_t length);
 void set_routing_table();
 uint8_t getuint_8();
 void update_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, uint8_t hop_count, int8_t snr);

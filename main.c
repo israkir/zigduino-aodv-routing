@@ -203,9 +203,8 @@ void rx_task ()
       // update routing table for this node
       update_routing_entry(aodvmsg.dest, aodvmsg.next_hop, rxmsg[0], rfRxInfo.rssi);
 
-      // should I rebroadcast?
+      // should I route?
       if (aodvmsg.src != aodv_id) {
-        aodvmsg.next_hop = aodv_id;
         RREP = &aodvmsg;
       }
       else {
@@ -283,29 +282,18 @@ void tx_task ()
 
     // Either from RREQ or RREP
     if (RREP) {
-      /*seq++;*/
-      //RREP
       aodvmsg = *RREP;
-      aodvmsg.msg[0] = ;
-      
-      uint8_t dest;
-      if ((dest = find_next_hop(aodvmsg.src)) != 0) {
-        pack_aodv_msg(tx_buf, aodvmsg);
-        printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
-
-        send_packet(tx_buf, sizeof(tx_buf));
-      }
+      pack_aodv_msg(tx_buf, aodvmsg);
+      send_packet(tx_buf, sizeof(tx_buf));
     }
 
     if (RREQ) {
       aodvrreq = *RREQ;
-      pack_aodv_RREQ(tx_buf, aodvmsg);
-
-      send_packet(tx_buf, sizeof(tx_buf));
+      pack_aodv_RREQ(tx_buf, aodvrreq);
+      broadcast_packet(tx_buf, sizeof(tx_buf));
     }
 
     if () {
-      /*seq++;*/
       aodvmsg.dest = aodv_id;
       aodvmsg.type = 0;
       aodvmsg.src = aodv_id;
