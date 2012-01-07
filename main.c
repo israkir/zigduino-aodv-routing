@@ -237,6 +237,7 @@ void rx_task ()
         renew_routing_entry(node_addr, aodvrrep.src);
         renew_routing_entry(aodvrrep.src, aodvrrep.dest);
 
+        aodvrrep.hop_count += 1;
         RREP = &aodvrrep;
       } else {
         RREP = NULL;
@@ -292,9 +293,8 @@ void tx_task ()
 
     nrk_event_wait(SIG(signal_send_packet));
 
-    // When should I send RACK?
+    // RACK
     if () {
-      //special RREP (RACK)
       aodvrreq.type = 4;
       aodvrreq.broadcast_id = 0;
       aodvrreq.dest = node_addr;
