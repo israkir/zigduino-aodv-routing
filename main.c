@@ -194,31 +194,34 @@ void rx_task ()
         }
       }
     } else if(type == 1) { // RREQ
-        unpack_aodv_rreq(local_rx_buf, &aodvrreq);
-        // create inverse routing entry
-        add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.broadcast_id, 
-          aodvrreq.hop_count, rfRxInfo.rssi);
-        if (aodvmsg.dest == node_addr) {
-          // this node is destination, so RREP!
-          aodvmsg.type = 2;
-          aodvmsg.src = aodvrreq.src;
-          aodvmsg.dest = aodvrreq.dest;
-          aodvmsg.next_hop = rfRxInfo.srcAddr;
-          aodvmsg.length = 1;
-          aodvmsg.msg[0] = broadcast_id;
-          RREQ = NULL;
-          RREP = &aodvmsg;
-        } else {
-          // this node is not destination, so propagate RREQ!
-          RREP = NULL;
-          aodvrreq.lifespan -= 1;
-          if (aodvrreq.lifespan == 0) {
-            // --------------------------------------------------------
-            // TODO: RERR to the source, so it can initiate a new RREQ!
-            // --------------------------------------------------------
+        unpack_aodv_RREQ(local_rx_buf, &aodvrreq);
+        // if received rreq is valid, then process it!
+        // valid: this node did not received a RREQ with the same broadcast_id & source addr
+        if (check_rreq_is_valid() != -1) {
+          // create inverse routing entry
+          add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi);         
+          // this node neighbor of destination, so RREP!
+          if (aodvrreq.dest == find_next_hop(aodvrreq.dest)) {
+            aodvmsg.type = 2;
+            aodvmsg.src = aodvrreq.src;
+            aodvmsg.dest = aodvrreq.dest;
+            aodvmsg.next_hop = rfRxInfo.srcAddr;
+            aodvmsg.length = 1;
+            aodvmsg.msg[0] = broadcast_id;
+            RREQ = NULL;
+            RREP = &aodvmsg;
           } else {
-            aodvrreq.hop_count += 1;
-            RREQ = &aodvrreq;
+            // this node is not destination, so propagate RREQ!
+            RREP = NULL;
+            aodvrreq.lifespan -= 1;
+            if (aodvrreq.lifespan == 0) {
+              // --------------------------------------------------------
+              // TODO: RERR to the source, so it can initiate a new RREQ!
+              // --------------------------------------------------------
+            } else {
+              aodvrreq.hop_count += 1;
+              RREQ = &aodvrreq;
+            }
           }
         }
     } else if(type == 2) { // RREP

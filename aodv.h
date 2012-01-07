@@ -48,6 +48,7 @@ extern uint8_t node_addr;
 extern uint8_t node_seq_num;
 extern uint8_t dest_seq_num;
 extern uint8_t table_size;
+extern uint8_t rreq_buffer_size;
 extern ROUTING_ENTRY routing_table[];
 extern AODV_RREQ_INFO rreq_buffer[];
 
@@ -76,5 +77,8 @@ void broadcast_rreq(uint8_t *tx_buf, uint8_t length);
 void set_routing_table();
 uint8_t getuint_8();
 void renew_routing_entry(uint8_t dest, uint8_t next_hop);
+
+int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq);
+int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq);
 
 #endif
