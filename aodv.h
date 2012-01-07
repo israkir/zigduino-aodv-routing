@@ -7,8 +7,11 @@
 typedef struct _routing_entry{
   uint8_t dest;
   uint8_t next_hop;
-  uint8_t dest_seq_num;
   uint8_t hop_count;
+  uint8_t dest_seq_num;
+  uint8_t neighbor_len;
+  uint8_t* neighbors;
+  uint8_t lifespan;
   int8_t ssnr2;
   struct _routing_entry *next;
 } ROUTING_ENTRY; 
@@ -18,7 +21,7 @@ typedef struct{
   uint8_t src;
   uint8_t next_hop;
   uint8_t dest;
-  int8_t length;
+  uint8_t msg_len;
   uint8_t* msg;
 } AODV_MSG_INFO;
 
@@ -31,9 +34,20 @@ typedef struct{
   uint8_t hop_count;
 } AODV_RREQ_INFO;
 
-extern uint8_t aodv_id;
+typedef struct{
+  uint8_t type;
+  uint8_t src;
+  uint8_t dest;
+  uint8_t dest_seq_num;
+  uint8_t hop_count;
+  uint8_t lifespan;
+} AODV_RREP_INFO;
+
+extern uint8_t node_addr;
+extern uint8_t node_seq_num;
 extern uint8_t table_size;
 extern ROUTING_ENTRY routing_table[];
+extern AODV_RREQ_INFO rreq_buffer[];
 
 
 int8_t init_aodv();

@@ -86,7 +86,7 @@ int main ()
   
   // init a unique id for this node
   init_srand_seed();
-  aodv_id = rand() % 1000;
+  node_addr = rand() % 1000;
 
   nrk_init ();
   nrk_time_set (0, 0);
@@ -116,7 +116,7 @@ void rx_task ()
   rfRxInfo.max_length = RF_MAX_PAYLOAD_SIZE;
   rfRxInfo.ackRequest = 1;
   nrk_int_enable();
-  rf_init (&rfRxInfo, 26, 0xffff, aodv_id);
+  rf_init (&rfRxInfo, 26, 0xffff, node_addr);
 
   rf_polling_rx_on();
   
@@ -162,9 +162,9 @@ void rx_task ()
         aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.length, aodvmsg.msg);
       //pass_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg);
 
-      if(aodvmsg.next_hop == aodv_id){
+      if(aodvmsg.next_hop == node_addr){
         // this AODV msg is for this node, so process it!
-        if(aodvmsg.dest == aodv_id){
+        if(aodvmsg.dest == node_addr){
           // this node is destination, so print received packet
           printf("!!!!get msg!!!!\r\n");
           printf("type = %d, src = %d, nexthop = %d, dest = %d, length = %d, msg = %s\r\n", 
@@ -194,7 +194,7 @@ void rx_task ()
         // create inverse routing entry
         add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.broadcast_id, 
           aodvrreq.hop_count, rfRxInfo.rssi);
-        if (aodvmsg.dest == aodv_id) {
+        if (aodvmsg.dest == node_addr) {
           // this node is destination, so RREP!
           aodvmsg.type = 2;
           aodvmsg.src = aodvrreq.src;
@@ -226,7 +226,7 @@ void rx_task ()
       update_routing_entry(aodvmsg.dest, aodvmsg.next_hop, rxmsg[0], rfRxInfo.rssi);
 
       // should I route?
-      if (aodvmsg.src != aodv_id) {
+      if (aodvmsg.src != node_addr) {
         RREP = &aodvmsg;
       } else {
         RREP = NULL;
@@ -292,7 +292,7 @@ void tx_task ()
       //special RREP (RACK)
       aodvrreq.type = 4;
       aodvrreq.broadcast_id = 0;
-      aodvrreq.dest = aodv_id;
+      aodvrreq.dest = node_addr;
       aodvrreq.lifespan = 1;
       aodvrreq.hop_count = 1;
 
@@ -317,9 +317,9 @@ void tx_task ()
     }
 
     if () {
-      aodvmsg.dest = aodv_id;
+      aodvmsg.dest = node_addr;
       aodvmsg.type = 0;
-      aodvmsg.src = aodv_id;
+      aodvmsg.src = node_addr;
       aodvmsg.length = strlen(msg)+1;
       aodvmsg.msg = msg;
 
