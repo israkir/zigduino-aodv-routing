@@ -61,7 +61,7 @@ AODV_RREQ_INFO* RACK = NULL;
 AODV_RREQ_INFO* RREP = NULL;
 
 uint8_t rf_ok;
-uint8_t broadcast_id = 1;
+uint8_t broadcast_id = 0;
 
 void init_srand_seed() {
   int light_val;
@@ -175,17 +175,19 @@ void rx_task ()
             printf("sendmsg to %d\r\n", next_hop);
             repack_forward_msg(local_rx_buf, aodvmsg, next_hop);
             send_packet(local_rx_buf, len);
-          }else{
-            // routing information is not found in the routing table, so RREQ!
+          } else {
+            // routing information is not found in the routing table, so issue a new RREQ!
+            broadcast_id++;
+            // construct RREQ message
             aodvrreq.type = 1;
             aodvrreq.broadcast_id = broadcast_id;
             aodvrreq.src = aodvmsg.src;
+            aodvrreq.src_seq_num = 1; 
             aodvrreq.dest = aodvmsg.dest;
-            aodvrreq.lifespan = 10;
+            aodvrreq.dest_seq_num = 0; // 0 means unknown.
             aodvrreq.hop_count = 1;
             // set flag for tx_task, so tx_task can broadcast!
             RREQ = &aodvrreq;
-            broadcast_id++;
           }
         }
       }
