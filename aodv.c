@@ -167,6 +167,20 @@ void pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg){
   memcpy(tx_buf+5, aodvmsg.msg, aodvmsg.msg_len);
 }
 
+void unpack_aodv_rerr(uint8_t* rx_buf, AODV_RERR_INFO* aodvrerr){
+  aodvrerr->type = rx_buf[0];
+  aodvrerr->dest = rx_buf[1];
+  aodvrerr->dest_seq = rx_buf[2];
+  aodvrerr->src = rx_buf[3];
+}
+
+void pack_aodv_rerr(uint8_t* tx_buf, AODV_RERR_INFO aodvrerr){
+  tx_buf[0] = aodvrerr.type;
+  tx_buf[1] = aodvrerr.dest;
+  tx_buf[2] = aodvrerr.dest_seq;
+  tx_buf[3] = aodvrerr.src;
+}
+
 void repack_forward_msg(uint8_t* buf, AODV_MSG_INFO aodvmsg, uint8_t next_hop){
   buf[2] = next_hop;
 }

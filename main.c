@@ -37,6 +37,7 @@ nrk_sig_t signal_send_packet;
 AODV_RREQ_INFO* RREQ = NULL;
 AODV_RREP_INFO* RACK = NULL;
 AODV_RREP_INFO* RREP = NULL;
+AODV_RERR_INFO* RERR = NULL;
 
 uint8_t rf_ok;
 uint8_t broadcast_id = 0;
@@ -227,7 +228,13 @@ void rx_task ()
         RREP = NULL;
       }
     } else if(type == 3) { //RERR
-      // TODO: implement this!
+	
+		unpack_aodv_RERR (local_rx_buf, &aodvrerr);
+		printf("type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
+	  
+		// delete route that contains broken link from the routing table
+		remove_routing_entry(); //Remove function not finished yet
+	  
     } else if(type == 4) { // RACK (special RREP)
       /*
       unpack_aodv_rreq (local_rx_buf, &aodvrreq);
@@ -312,6 +319,7 @@ void tx_task ()
       pack_aodv_rreq(tx_buf, aodvrreq);
       broadcast_rreq(tx_buf, sizeof(tx_buf));
     }
+  
 
     /*
     if () {

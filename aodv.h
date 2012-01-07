@@ -44,6 +44,13 @@ typedef struct{
   uint8_t lifespan;
 } AODV_RREP_INFO;
 
+typedef struct{
+  uint8_t type;
+  uint8_t dest;
+  uint8_t dest_seq;
+  uint8_t src;
+} AODV_RERR_INFO;
+
 extern uint8_t node_addr;
 extern uint8_t node_seq_num;
 extern uint8_t dest_seq_num;
@@ -57,10 +64,12 @@ uint8_t get_msg_type(uint8_t* rx_buf);
 void unpack_aodv_rreq(uint8_t* rx_buf, AODV_RREQ_INFO* aodvrreq);
 void unpack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO* aodvrrep);
 void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg);
+void unpack_aodv_rerr(uint8_t* rx_buf, AODV_RERR_INFO* aodvrerr);
 
 void pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq);
 void pack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep);
 void pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg);
+void pack_aodv_rerr(uint8_t* tx_buf, AODV_RERR_INFO aodvrerr);
 
 void repack_forward_msg(uint8_t* buf, AODV_MSG_INFO aodvmsg, uint8_t next_hop);
 
