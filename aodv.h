@@ -26,15 +26,15 @@ typedef struct{
   uint8_t type;
   uint8_t broadcast_id;
   uint8_t src;
+  uint8_t src_seq_num;
   uint8_t dest;
-  uint8_t lifespan;
+  uint8_t dest_seq_num;
   uint8_t hop_count;
 } AODV_RREQ_INFO;
 
 extern uint8_t aodv_id;
 extern uint8_t table_size;
 extern ROUTING_ENTRY routing_table[];
-
 
 int8_t init_aodv();
 uint8_t get_msg_type(uint8_t* rx_buf);
