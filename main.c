@@ -179,17 +179,24 @@ void rx_task ()
             send_packet(local_rx_buf, len);
           } else {
             // routing information is not found in the routing table, so issue a new RREQ!
-            broadcast_id++;
-            // construct RREQ message
-            aodvrreq.type = 1;
-            aodvrreq.broadcast_id = broadcast_id;
-            aodvrreq.src = aodvmsg.src;
-            aodvrreq.src_seq_num = 1; 
-            aodvrreq.dest = aodvmsg.dest;
-            aodvrreq.dest_seq_num = 0; // 0 means unknown.
-            aodvrreq.hop_count = 1;
-            // set flag for tx_task, so tx_task can broadcast!
-            RREQ = &aodvrreq;
+            if (aodvmsg.src == node_addr) {
+              broadcast_id++;
+              // construct RREQ message
+              aodvrreq.type = 1;
+              aodvrreq.broadcast_id = broadcast_id;
+              aodvrreq.src = aodvmsg.src;
+              aodvrreq.src_seq_num = 1; 
+              aodvrreq.dest = aodvmsg.dest;
+              aodvrreq.dest_seq_num = 0; // 0 means unknown.
+              aodvrreq.hop_count = 1;
+              // set flag for tx_task, so tx_task can broadcast!
+              RREQ = &aodvrreq;
+            }
+            /*
+            else {
+              // TODO: check about this case
+            }
+            */
           }
         }
       }
@@ -202,26 +209,25 @@ void rx_task ()
           add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi);         
           // this node neighbor of destination, so RREP!
           if (aodvrreq.dest == find_next_hop(aodvrreq.dest)) {
-            aodvmsg.type = 2;
-            aodvmsg.src = aodvrreq.src;
-            aodvmsg.dest = aodvrreq.dest;
-            aodvmsg.next_hop = rfRxInfo.srcAddr;
-            aodvmsg.length = 1;
-            aodvmsg.msg[0] = broadcast_id;
-            RREQ = NULL;
-            RREP = &aodvmsg;
-          } else {
-            // this node is not destination, so propagate RREQ!
-            RREP = NULL;
-            aodvrreq.lifespan -= 1;
-            if (aodvrreq.lifespan == 0) {
-              // --------------------------------------------------------
-              // TODO: RERR to the source, so it can initiate a new RREQ!
-              // --------------------------------------------------------
+            if (dest_seq_num < aodvrreq.dest_seq_num) {
+              aodvrrep.type = 2;
+              aodvrrep.src = aodvrreq.src;
+              aodvrrep.dest = aodvrreq.dest;
+              aodvrrep.dest_seq_num = dest_seq_num;
+              aodvrrep.hop_count = 1;
+              RREQ = NULL;
+              RREP = &aodvrrep;
             } else {
+              // this node is not neighbor to destination, so propagate RREQ!
+              RREP = NULL;
               aodvrreq.hop_count += 1;
               RREQ = &aodvrreq;
             }
+          } else {
+            // this node is not destination, so propagate RREQ!
+            RREP = NULL;        
+            aodvrreq.hop_count += 1;
+            RREQ = &aodvrreq;
           }
         }
     } else if(type == 2) { // RREP
@@ -233,17 +239,19 @@ void rx_task ()
         // update the destination sequence number
         dest_seq_num = aodvrrep.dest_seq_num;
 
+        // TODO: this is for timeout of the reverse route entries
         // renew routing table entries to source and destination
-        renew_routing_entry(node_addr, aodvrrep.src);
-        renew_routing_entry(aodvrrep.src, aodvrrep.dest);
-
+        // renew_routing_entry(node_addr, aodvrrep.src);
+        // renew_routing_entry(aodvrrep.src, aodvrrep.dest);
+        RREQ = NULL;
         RREP = &aodvrrep;
       } else {
+        RREQ = NULL;
         RREP = NULL;
       }
     } else if(type == 3) { //RERR
       // TODO: implement this!
-    } else if(type == 4) { //RACK (special RREP)
+    } else if(type == 4) { // RACK (special RREP)
       unpack_aodv_rreq (local_rx_buf, &aodvrreq);
       printf("\r\ntype = %d, broadcast_id = %d, src = %d, dest = %d, lifespan = %d, hop_count = %d\r\n", 
         aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.dest, aodvrreq.lifespan, aodvrreq.hop_count);
