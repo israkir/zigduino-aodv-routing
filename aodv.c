@@ -279,6 +279,23 @@ void send_rrep(uint8_t *tx_buf, uint8_t length, uint8_t next_hop){
   nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
 }
 
+void send_rerr(uint8_t *tx_buf, uint8_t length, uint8_t next_hop){
+  rfTxInfo.pPayload = tx_buf;
+  rfTxInfo.length = length;
+  rfTxInfo.destAddr = next_hop;
+  rfTxInfo.cca = 0;
+  rfTxInfo.ackRequest = 1;
+
+  //printf( "Sending\r\n" );
+  if(rf_tx_packet(&rfTxInfo) != 1){
+    nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
+  }else{
+    nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
+  }
+
+  nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+}
+
 
 int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
   if (rreq_buffer_size < RREQ_BUFFER_SIZE) {

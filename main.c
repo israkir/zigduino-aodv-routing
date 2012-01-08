@@ -87,6 +87,7 @@ void rx_task ()
   AODV_RREQ_INFO aodvrreq;
   AODV_RREP_INFO aodvrrep;
   AODV_RREP_INFO aodvrack;
+  AODV_RERR_INFO aodvrerr;
 
   printf ("rx_task PID=%d\r\n", nrk_get_pid ());
 
@@ -270,6 +271,7 @@ void tx_task ()
   AODV_RREQ_INFO aodvrreq;
   AODV_RREP_INFO aodvrrep;
   AODV_RREP_INFO aodvrack;
+  AODV_RERR_INFO aodvrerr;
 
   signal_send_packet = nrk_rx_signal_get();
   nrk_signal_register(signal_send_packet);	
@@ -319,6 +321,12 @@ void tx_task ()
       pack_aodv_rreq(tx_buf, aodvrreq);
       broadcast_rreq(tx_buf, sizeof(tx_buf));
     }
+	
+	if (RERR) {
+	  aodvrerr = *RERR;
+	  pack_aodv_rerr(tx_buf, aodvrerr);
+	  send_rerr(tx_buf, sizeof(tx_buf), find_next_hop(aodvrerr.src));
+	}
   
 
     /*
