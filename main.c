@@ -229,13 +229,12 @@ void rx_task ()
         RREP = NULL;
       }
     } else if(type == 3) { //RERR
-	
-		unpack_aodv_rerr (local_rx_buf, &aodvrerr);
-		printf("type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
-	  
-		// delete route that contains broken link from the routing table
-		remove_routing_entry(); //Remove function not finished yet
-	  
+    
+        unpack_aodv_rerr (local_rx_buf, &aodvrerr);
+        printf("type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
+        // delete route that contains broken link from the routing table
+        remove_routing_entry(); //Remove function not finished yet
+
     } else if(type == 4) { // RACK (special RREP)
       /*
       unpack_aodv_rreq (local_rx_buf, &aodvrreq);
@@ -257,7 +256,7 @@ void rx_task ()
 
     //printf ("Got RX packet len=%d RSSI=%d [", len, rssi);
     //for (i = 0; i < len; i++)
-    //	printf ("%c", rx_buf[i]);
+    //printf ("%c", rx_buf[i]);
     //printf ("]\r\n");
     nrk_led_clr (RFRX_LED);
     nrk_event_wait(SIG(rx_signal));
@@ -321,12 +320,12 @@ void tx_task ()
       pack_aodv_rreq(tx_buf, aodvrreq);
       broadcast_rreq(tx_buf, sizeof(tx_buf));
     }
-	
-	if (RERR) {
-	  aodvrerr = *RERR;
-	  pack_aodv_rerr(tx_buf, aodvrerr);
-	  send_rerr(tx_buf, sizeof(tx_buf), find_next_hop(aodvrerr.src));
-	}
+
+    if (RERR) {
+      aodvrerr = *RERR;
+      pack_aodv_rerr(tx_buf, aodvrerr);
+      send_rerr(tx_buf, sizeof(tx_buf), find_next_hop(aodvrerr.src));
+    }
   
 
     /*
