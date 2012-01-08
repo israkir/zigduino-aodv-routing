@@ -22,6 +22,7 @@ typedef struct{
   uint8_t next_hop;
   uint8_t dest;
   uint8_t msg_len;
+  uint8_t msg_seq_no;
   uint8_t* msg;
 } AODV_MSG_INFO;
 

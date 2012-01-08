@@ -20,6 +20,10 @@ nrk_task_type TX_TASK;
 NRK_STK tx_task_stack[NRK_APP_STACKSIZE];
 void tx_task (void);
 
+nrk_task_type SERIAL_TASK;
+NRK_STK serial_task_stack[NRK_APP_STACKSIZE];
+void serial_task(void);
+
 void nrk_create_taskset ();
 
 uint8_t rxmsg[100];
@@ -38,6 +42,7 @@ AODV_RREQ_INFO* RREQ = NULL;
 AODV_RREP_INFO* RACK = NULL;
 AODV_RREP_INFO* RREP = NULL;
 AODV_RERR_INFO* RERR = NULL;
+AODV_MSG_INFO* RMSG = NULL;
 
 uint8_t rf_ok;
 uint8_t broadcast_id = 0;
@@ -63,8 +68,16 @@ int main ()
   nrk_setup_uart (UART_BAUDRATE_115K2);
   
   // init a unique id for this node
-  init_srand_seed();
-  node_addr = rand() % 1000;
+
+  if (WHOAMI == "source") {
+    node_addr = 5;
+  } else if (WHOAMI == "destination") {
+    node_addr = 6;
+  } else {
+    init_srand_seed();
+    node_addr = (rand() % 1000) + 7;
+  }
+  printf("My addr is: %d\r\n", node_addr);
 
   nrk_init ();
   nrk_time_set (0, 0);
@@ -91,7 +104,8 @@ void rx_task ()
 
   printf ("rx_task PID=%d\r\n", nrk_get_pid ());
 
-  set_routing_table();
+
+  // set_routing_table();
   // Init basic rf 
   rfRxInfo.pPayload = rx_buf;
   rfRxInfo.max_length = RF_MAX_PAYLOAD_SIZE;
@@ -170,6 +184,7 @@ void rx_task ()
               aodvrreq.hop_count = 1;
               // set flag for tx_task, so tx_task can broadcast!
               RREQ = &aodvrreq;
+              nrk_event_signal(SIG(signal_send_packet));
             }
             /*
             else {
@@ -196,17 +211,20 @@ void rx_task ()
               aodvrrep.hop_count = 1;
               RREQ = NULL;
               RREP = &aodvrrep;
+              nrk_event_signal(SIG(signal_send_packet));
             } else {
               // this node is not neighbor to destination, so propagate RREQ!
               RREP = NULL;
               aodvrreq.hop_count += 1;
               RREQ = &aodvrreq;
+              nrk_event_signal(SIG(signal_send_packet));
             }
           } else {
             // this node is not destination, so propagate RREQ!
             RREP = NULL;        
             aodvrreq.hop_count += 1;
             RREQ = &aodvrreq;
+            nrk_event_signal(SIG(signal_send_packet));
           }
         }
     } else if(type == 2) { // RREP
@@ -224,17 +242,20 @@ void rx_task ()
         // renew_routing_entry(aodvrrep.dest);
         RREQ = NULL;
         RREP = &aodvrrep;
+        nrk_event_signal(SIG(signal_send_packet));
       } else {
         RREQ = NULL;
         RREP = NULL;
       }
     } else if(type == 3) { //RERR
-    
-        unpack_aodv_rerr (local_rx_buf, &aodvrerr);
-        printf("type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
-        // delete route that contains broken link from the routing table
-        remove_routing_entry(); //Remove function not finished yet
 
+  
+    unpack_aodv_rerr (local_rx_buf, &aodvrerr);
+    printf("type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
+    
+    // delete route that contains broken link from the routing table
+    remove_routing_entry(); //Remove function not finished yet
+    
     } else if(type == 4) { // RACK (special RREP)
       /*
       unpack_aodv_rreq (local_rx_buf, &aodvrreq);
@@ -256,10 +277,12 @@ void rx_task ()
 
     //printf ("Got RX packet len=%d RSSI=%d [", len, rssi);
     //for (i = 0; i < len; i++)
+
     //printf ("%c", rx_buf[i]);
     //printf ("]\r\n");
     nrk_led_clr (RFRX_LED);
-    nrk_event_wait(SIG(rx_signal));
+
+    /*nrk_event_wait(SIG(rx_signal));*/
   }
 }
 
@@ -283,7 +306,6 @@ void tx_task ()
   while (1) {
 
     nrk_led_set(RFTX_LED);
-
     nrk_event_wait(SIG(signal_send_packet));
 
     // RACK
@@ -321,6 +343,7 @@ void tx_task ()
       broadcast_rreq(tx_buf, sizeof(tx_buf));
     }
 
+
     if (RERR) {
       aodvrerr = *RERR;
       pack_aodv_rerr(tx_buf, aodvrerr);
@@ -328,41 +351,68 @@ void tx_task ()
     }
   
 
-    /*
-    if () {
-      aodvmsg.dest = node_addr;
-      aodvmsg.type = 0;
-      aodvmsg.src = node_addr;
-      aodvmsg.length = strlen(msg)+1;
-      aodvmsg.msg = msg;
 
+    if (RMSG) {
+      aodvmsg = *RMSG;
       if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
-
         pack_aodv_msg(tx_buf, aodvmsg);
         printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
           tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
-        // Build the TX packet
-        rfTxInfo.pPayload = tx_buf;
-        rfTxInfo.length = aodvmsg.length+5;
-        rfTxInfo.destAddr = tx_buf[2];
-        rfTxInfo.cca = 0;
-        rfTxInfo.ackRequest = 1;
 
-        //printf( "Sending\r\n" );
-        if(rf_tx_packet(&rfTxInfo) != 1){
-          printf("@@@ RF_TX ERROR @@@\r\n");
-        }else{
-          printf("--- RF_TX ACK!! ---\r\n");
-        }
-        //nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+
+
+          send_packet(tx_buf, sizeof(tx_buf)+5);
       }
     }
-    */
+
 
     nrk_led_clr(RFTX_LED);
     nrk_wait_until_next_period();
   }
 }
+
+
+void serial_task()
+{
+  nrk_sig_t uart_rx_signal;
+  nrk_sig_mask_t sm;
+  char c;
+  
+  AODV_MSG_INFO aodvmsg;
+
+  // Get the signal for UART RX
+    uart_rx_signal=nrk_uart_rx_signal_get();
+     // Register task to wait on signal
+    nrk_signal_register(uart_rx_signal);
+    
+  int ret = -3;
+  int msg_seq_no = 0;
+  
+  while(1) {
+    printf("ready to read...\r\n");
+    if (nrk_uart_data_ready(NRK_DEFAULT_UART)) {
+      ret = scanf("%c", &c);
+      msg[0] = c;
+      aodvmsg.type = 0;
+      aodvmsg.src = 5;
+      aodvmsg.dest = 6;
+      aodvmsg.msg_len = 1;
+      aodvmsg.msg_seq_no = msg_seq_no++;
+      aodvmsg.msg = msg;
+      RMSG = &aodvmsg;
+      nrk_event_signal(SIG(signal_send_packet));
+      printf("ret: %d || char: %c\r\n", ret, c);
+    } else {
+      printf("ready to wait...\r\n");
+      // Suspend until UART data arrives
+      sm = nrk_event_wait(SIG(uart_rx_signal));
+      if (sm != SIG(uart_rx_signal)) {
+        nrk_kprintf(PSTR("UART RX signal error!"));
+      }
+    }
+  }
+}
+
 
 void nrk_create_taskset ()
 {
@@ -394,5 +444,19 @@ void nrk_create_taskset ()
   TX_TASK.offset.nano_secs = 0;
   nrk_activate_task (&TX_TASK);
 
+  SERIAL_TASK.task = serial_task;
+  nrk_task_set_stk(&SERIAL_TASK, serial_task_stack, NRK_APP_STACKSIZE);
+  SERIAL_TASK.prio = 2;
+  SERIAL_TASK.FirstActivation = TRUE;
+  SERIAL_TASK.Type = BASIC_TASK;
+  SERIAL_TASK.SchType = PREEMPTIVE;
+  SERIAL_TASK.period.secs = 0;
+  SERIAL_TASK.period.nano_secs = 500 * NANOS_PER_MS;
+  SERIAL_TASK.cpu_reserve.secs = 1;
+  SERIAL_TASK.cpu_reserve.nano_secs = 0;
+  SERIAL_TASK.offset.secs = 0;
+  SERIAL_TASK.offset.nano_secs = 0;
+  nrk_activate_task (&SERIAL_TASK);
+  
   printf ("Create done\r\n");
 }
