@@ -316,6 +316,7 @@ void tx_task ()
 
     nrk_led_set(RFTX_LED);
     nrk_event_wait(SIG(signal_send_packet));
+    printf("in tx_task\r\n");
 
     // RACK
     /*
@@ -345,6 +346,7 @@ void tx_task ()
     }
 
     if (RMSG) {
+      printf("in RMSG\r\n");
       aodvmsg = *RMSG;  
       if (!is_broadcasting) {
         if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
@@ -369,6 +371,7 @@ void tx_task ()
     }
     
     if (RREQ) {
+      printf("in RREQ\r\n");
       if (strcmp(WHOAMI, "source") == 0) {
         node_seq_num++;
       }
