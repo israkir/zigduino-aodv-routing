@@ -244,7 +244,7 @@ void rx_task ()
 
         // Creating a new or replace existing routing entry from the rrep message
         printf("[RX-RREP] adding or updating routing table entry\r\n");
-        if (find_index(aodvrrep.dest, aodvrrep.dest_seq_num)) {
+        if (find_index(aodvrrep.dest, aodvrrep.dest_seq_num) > -1) {
           update_routing_entry(aodvrrep.dest, rfRxInfo.srcAddr, aodvrrep.dest_seq_num, aodvrrep.hop_count, rfRxInfo.rssi); 
         } else {
           add_routing_entry(aodvrrep.dest, rfRxInfo.srcAddr, aodvrrep.dest_seq_num, aodvrrep.hop_count, rfRxInfo.rssi); 

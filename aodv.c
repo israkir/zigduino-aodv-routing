@@ -89,7 +89,6 @@ int8_t update_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num
 }
 
 int8_t add_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, uint8_t hop_count, int8_t snr){
-  
   if(table_size < MAX_TABLE_SIZE){
     routing_table[table_size].dest = dest;
     routing_table[table_size].next_hop = next_hop;
