@@ -238,15 +238,18 @@ void rx_task ()
         aodvrrep.type, aodvrrep.src, aodvrrep.dest, aodvrrep.dest_seq_num, aodvrrep.hop_count, aodvrrep.lifespan);
 
       if ((dest_seq_num < aodvrrep.dest_seq_num) || (aodvrrep.dest_seq_num == 0)) {
+        printf("[RX-RREP] check is valid - updating destination sequence number\r\n");
         // update the destination sequence number
         dest_seq_num = aodvrrep.dest_seq_num;
 
         // Creating a new or replace existing routing entry from the rrep message
+        printf("[RX-RREP] adding or updating routing table entry\r\n");
         if (find_index(aodvrrep.dest, aodvrrep.dest_seq_num)) {
           update_routing_entry(aodvrrep.dest, rfRxInfo.srcAddr, aodvrrep.dest_seq_num, aodvrrep.hop_count, rfRxInfo.rssi); 
         } else {
           add_routing_entry(aodvrrep.dest, rfRxInfo.srcAddr, aodvrrep.dest_seq_num, aodvrrep.hop_count, rfRxInfo.rssi); 
         }
+        print_routing_table();
 
         // TODO: this is for timeout of the reverse route entries
         // renew routing table entries to source and destination
