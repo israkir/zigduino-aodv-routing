@@ -316,7 +316,7 @@ void tx_task ()
 
     nrk_led_set(RFTX_LED);
     /*nrk_event_wait(SIG(signal_send_packet));*/
-    printf("in tx_task\r\n");
+    /*printf("in tx_task\r\n");*/
 
     // RACK
     /*
@@ -377,6 +377,8 @@ void tx_task ()
         node_seq_num++;
       }
       aodvrreq = *RREQ;
+      printf("type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", 
+        aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
       pack_aodv_rreq(tx_buf, aodvrreq);
       broadcast_rreq(tx_buf, sizeof(tx_buf));
       is_broadcasting = 1;
