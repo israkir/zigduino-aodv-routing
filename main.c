@@ -170,6 +170,7 @@ void rx_task ()
               aodvrreq.hop_count = 1;
               // set flag for tx_task, so tx_task can broadcast!
               RREQ = &aodvrreq;
+              nrk_event_signal(SIG(signal_send_packet));
             }
             /*
             else {
@@ -196,17 +197,20 @@ void rx_task ()
               aodvrrep.hop_count = 1;
               RREQ = NULL;
               RREP = &aodvrrep;
+              nrk_event_signal(SIG(signal_send_packet));
             } else {
               // this node is not neighbor to destination, so propagate RREQ!
               RREP = NULL;
               aodvrreq.hop_count += 1;
               RREQ = &aodvrreq;
+              nrk_event_signal(SIG(signal_send_packet));
             }
           } else {
             // this node is not destination, so propagate RREQ!
             RREP = NULL;        
             aodvrreq.hop_count += 1;
             RREQ = &aodvrreq;
+            nrk_event_signal(SIG(signal_send_packet));
           }
         }
     } else if(type == 2) { // RREP
@@ -224,18 +228,19 @@ void rx_task ()
         // renew_routing_entry(aodvrrep.dest);
         RREQ = NULL;
         RREP = &aodvrrep;
+        nrk_event_signal(SIG(signal_send_packet));
       } else {
         RREQ = NULL;
         RREP = NULL;
       }
     } else if(type == 3) { //RERR
-	
-		unpack_aodv_rerr (local_rx_buf, &aodvrerr);
-		printf("type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
-	  
-		// delete route that contains broken link from the routing table
-		remove_routing_entry(); //Remove function not finished yet
-	  
+  
+    unpack_aodv_rerr (local_rx_buf, &aodvrerr);
+    printf("type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
+    
+    // delete route that contains broken link from the routing table
+    remove_routing_entry(); //Remove function not finished yet
+    
     } else if(type == 4) { // RACK (special RREP)
       /*
       unpack_aodv_rreq (local_rx_buf, &aodvrreq);
@@ -260,7 +265,7 @@ void rx_task ()
     //	printf ("%c", rx_buf[i]);
     //printf ("]\r\n");
     nrk_led_clr (RFRX_LED);
-    nrk_event_wait(SIG(rx_signal));
+    /*nrk_event_wait(SIG(rx_signal));*/
   }
 }
 
@@ -329,36 +334,16 @@ void tx_task ()
 	}
   
 
-    /*
-    if () {
-      aodvmsg.dest = node_addr;
-      aodvmsg.type = 0;
-      aodvmsg.src = node_addr;
-      aodvmsg.length = strlen(msg)+1;
-      aodvmsg.msg = msg;
-
+    if (RMSG) {
+      aodvmsg = *RMSG;
       if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
-
         pack_aodv_msg(tx_buf, aodvmsg);
         printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
           tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
-        // Build the TX packet
-        rfTxInfo.pPayload = tx_buf;
-        rfTxInfo.length = aodvmsg.length+5;
-        rfTxInfo.destAddr = tx_buf[2];
-        rfTxInfo.cca = 0;
-        rfTxInfo.ackRequest = 1;
 
-        //printf( "Sending\r\n" );
-        if(rf_tx_packet(&rfTxInfo) != 1){
-          printf("@@@ RF_TX ERROR @@@\r\n");
-        }else{
-          printf("--- RF_TX ACK!! ---\r\n");
-        }
-        //nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+          send_packet(tx_buf, sizeof(tx_buf)+5);
       }
     }
-    */
 
     nrk_led_clr(RFTX_LED);
     nrk_wait_until_next_period();
