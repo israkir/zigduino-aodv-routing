@@ -241,6 +241,13 @@ void rx_task ()
         // update the destination sequence number
         dest_seq_num = aodvrrep.dest_seq_num;
 
+        // Creating a new or replace existing routing entry from the rrep message
+        if (find_index(aodvrrep.dest, aodvrrep.dest_seq_num)) {
+          update_routing_entry(aodvrrep.dest, rfRxInfo.srcAddr, aodvrrep.dest_seq_num, aodvrrep.hop_count, rfRxInfo.rssi); 
+        } else {
+          add_routing_entry(aodvrrep.dest, rfRxInfo.srcAddr, aodvrrep.dest_seq_num, aodvrrep.hop_count, rfRxInfo.rssi); 
+        }
+
         // TODO: this is for timeout of the reverse route entries
         // renew routing table entries to source and destination
         // renew_routing_entry(aodvrrep.src);

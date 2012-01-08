@@ -70,12 +70,22 @@ uint8_t getuint_8(){
   return num;
 }
 
-void renew_routing_entry(uint8_t dest) {
-  uint8_t index = find_index(dest);
+void renew_routing_entry(uint8_t dest, uint8_t dest_seq_num) {
+  uint8_t index = find_index(dest, dest_seq_num);
   if (index > -1) {
     routing_table[index].lifespan = MAX_LIFESPAN;
     /*routing_table[index].ssnr2 = 0.5 * (routing_table[table_size].ssnr2 + snr);*/
   }
+}
+
+int8_t update_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, uint8_t hop_count, int8_t snr){
+  uint8_t index = find_index(dest, dest_seq_num);
+  routing_table[index].dest = dest;
+  routing_table[index].next_hop = next_hop;
+  routing_table[index].dest_seq_num = dest_seq_num;
+  routing_table[index].hop_count = hop_count;
+  routing_table[index].ssnr2 = 0.5 * (routing_table[index].ssnr2 + snr);
+  return 0;
 }
 
 int8_t add_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, uint8_t hop_count, int8_t snr){
@@ -189,10 +199,10 @@ void repack_forward_msg(uint8_t* buf, AODV_MSG_INFO aodvmsg, uint8_t next_hop){
   buf[2] = next_hop;
 }
 
-uint8_t find_index(uint8_t dest){
+uint8_t find_index(uint8_t dest, uint8_t dest_seq_num){
   uint8_t i;
   for(i = 0; i < table_size; i++){
-    if(routing_table[i].dest == dest)
+    if(routing_table[i].dest == dest && routing_table[i].dest_seq_num == dest_seq_num)
       return i;
   }
   return -1; // did not find in routing table
