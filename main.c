@@ -28,6 +28,7 @@ void nrk_create_taskset ();
 
 uint8_t rxmsg[100];
 uint8_t msg[32];
+uint8_t is_broadcasting = 0;
 
 RF_TX_INFO rfTxInfo;
 RF_RX_INFO rfRxInfo;
@@ -76,6 +77,7 @@ int main ()
     init_srand_seed();
     node_addr = (rand() % 1000) + 7;
   }
+  printf(WHOAMI);
   printf("My addr is: %d\r\n", node_addr);
 
   nrk_init ();
@@ -238,9 +240,16 @@ void rx_task ()
         // renew routing table entries to source and destination
         // renew_routing_entry(aodvrrep.src);
         // renew_routing_entry(aodvrrep.dest);
+        
+        if (node_addr == aodvrrep.src) {
+          is_broadcasting = 0;
+          RREP = NULL;
+        } else {
+          RREP = &aodvrrep;
+        }
         RREQ = NULL;
-        RREP = &aodvrrep;
-        nrk_event_signal(SIG(signal_send_packet));
+        if (RREP || RMSG)
+          nrk_event_signal(SIG(signal_send_packet));
       } else {
         RREQ = NULL;
         RREP = NULL;
@@ -327,6 +336,7 @@ void tx_task ()
       aodvrrep = *RREP;
       pack_aodv_rrep(tx_buf, aodvrrep);
       send_rrep(tx_buf, sizeof(tx_buf), find_next_hop(aodvrrep.src));
+      RREP = NULL;
     }
 
     if (RREQ) {
@@ -336,23 +346,39 @@ void tx_task ()
       aodvrreq = *RREQ;
       pack_aodv_rreq(tx_buf, aodvrreq);
       broadcast_rreq(tx_buf, sizeof(tx_buf));
+      is_broadcasting = 1;
+      RREQ = NULL;
     }
 	
     if (RERR) {
       aodvrerr = *RERR;
       pack_aodv_rerr(tx_buf, aodvrerr);
       send_rerr(tx_buf, sizeof(tx_buf), find_next_hop(aodvrerr.src));
+      RERR = NULL;
     }
-  
 
     if (RMSG) {
       aodvmsg = *RMSG;
-      if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
-        pack_aodv_msg(tx_buf, aodvmsg);
-        printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
-          tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
-
+      if (!is_broadcasting) {
+        if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
+          pack_aodv_msg(tx_buf, aodvmsg);
+          printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
+            tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
           send_packet(tx_buf, sizeof(tx_buf)+5);
+        } else {
+          broadcast_id++;
+          // construct RREQ message
+          aodvrreq.type = 1;
+          aodvrreq.broadcast_id = broadcast_id;
+          aodvrreq.src = aodvmsg.src;
+          aodvrreq.src_seq_num = 1; 
+          aodvrreq.dest = aodvmsg.dest;
+          aodvrreq.dest_seq_num = 0; // 0 means unknown.
+          aodvrreq.hop_count = 1;
+          // set flag for tx_task, so tx_task can broadcast!
+          RREQ = &aodvrreq;
+          nrk_event_signal(SIG(signal_send_packet));
+        }
       }
     }
 

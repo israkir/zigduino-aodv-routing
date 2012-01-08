@@ -7,7 +7,7 @@ PLATFORM = zigduino
 TARGET = main
 
 # Set the Port that you programmer is connected to 
-PROGRAMMING_PORT = /dev/ttyUSB0 # programmer connected to serial device
+PROGRAMMING_PORT = com6
 
 # Set this such that the nano-RK directory is the base path
 ROOT_DIR = ../../..
