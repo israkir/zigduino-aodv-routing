@@ -171,7 +171,7 @@ void rx_task ()
           if((next_hop = find_next_hop(aodvmsg.dest)) != 0){
             printf("sendmsg to %d\r\n", next_hop);
             repack_forward_msg(local_rx_buf, aodvmsg, next_hop);
-            send_packet(local_rx_buf, len);
+            send_packet(local_rx_buf);
           } else {
             // routing information is not found in the routing table, so issue a new RREQ!
             if (aodvmsg.src == node_addr) {
@@ -331,7 +331,7 @@ void tx_task ()
       printf("txpacket type = %d, broadcast_id = %d, dest = %d, lifespan = %d, hop_count = %d\r\n", 
         tx_buf[0], tx_buf[1], tx_buf[3], tx_buf[4], tx_buf[5]);
 
-      send_packet(tx_buf, sizeof(tx_buf));
+      send_packet(tx_buf);
     }
     */
 
@@ -341,7 +341,7 @@ void tx_task ()
       }
       aodvrrep = *RREP;
       pack_aodv_rrep(tx_buf, aodvrrep);
-      send_rrep(tx_buf, sizeof(tx_buf), find_next_hop(aodvrrep.src));
+      send_rrep(tx_buf, find_next_hop(aodvrrep.src));
       RREP = NULL;
     }
 
@@ -353,7 +353,7 @@ void tx_task ()
           pack_aodv_msg(tx_buf, aodvmsg);
           printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
-          send_packet(tx_buf, sizeof(tx_buf)+5);
+          send_packet(tx_buf);
         } else {
           printf("broadcasting rreq...\r\n");
           broadcast_id++;
@@ -380,7 +380,7 @@ void tx_task ()
       printf("type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", 
         aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
       pack_aodv_rreq(tx_buf, aodvrreq);
-      broadcast_rreq(tx_buf, sizeof(tx_buf));
+      broadcast_rreq(tx_buf);
       is_broadcasting = 1;
       RREQ = NULL;
     }
@@ -388,7 +388,7 @@ void tx_task ()
     if (RERR) {
       aodvrerr = *RERR;
       pack_aodv_rerr(tx_buf, aodvrerr);
-      send_rerr(tx_buf, sizeof(tx_buf), find_next_hop(aodvrerr.src));
+      send_rerr(tx_buf, find_next_hop(aodvrerr.src));
       RERR = NULL;
     }
 

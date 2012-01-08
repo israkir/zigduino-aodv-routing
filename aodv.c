@@ -226,10 +226,10 @@ void set_routing_table()
   print_routing_table();
 }
 
-void broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
+void broadcast_rreq(uint8_t *tx_buf) {
   // printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
   rfTxInfo.pPayload = tx_buf;
-  rfTxInfo.length = length;
+  rfTxInfo.length = sizeof(tx_buf)+5;
   rfTxInfo.destAddr = 0xffff; // broadcast by default
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
@@ -244,10 +244,10 @@ void broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
   nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
 }
 
-void send_packet(uint8_t *tx_buf, uint8_t length){
+void send_packet(uint8_t *tx_buf){
   // printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
   rfTxInfo.pPayload = tx_buf;
-  rfTxInfo.length = length;
+  rfTxInfo.length = sizeof(tx_buf)+5;
   rfTxInfo.destAddr = tx_buf[2]; // next_hop
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
@@ -262,9 +262,9 @@ void send_packet(uint8_t *tx_buf, uint8_t length){
   nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
 }
 
-void send_rrep(uint8_t *tx_buf, uint8_t length, uint8_t next_hop){
+void send_rrep(uint8_t *tx_buf, uint8_t next_hop){
   rfTxInfo.pPayload = tx_buf;
-  rfTxInfo.length = length;
+  rfTxInfo.length = sizeof(tx_buf)+5;
   rfTxInfo.destAddr = next_hop;
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
@@ -279,9 +279,9 @@ void send_rrep(uint8_t *tx_buf, uint8_t length, uint8_t next_hop){
   nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
 }
 
-void send_rerr(uint8_t *tx_buf, uint8_t length, uint8_t next_hop){
+void send_rerr(uint8_t *tx_buf, uint8_t next_hop){
   rfTxInfo.pPayload = tx_buf;
-  rfTxInfo.length = length;
+  rfTxInfo.length = sizeof(tx_buf)+5;
   rfTxInfo.destAddr = next_hop;
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
