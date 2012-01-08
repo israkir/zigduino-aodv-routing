@@ -102,7 +102,11 @@ void print_routing_table(){
   uint8_t i;
   nrk_kprintf(PSTR("d,n,s,h\r\n"));
   for(i=0 ; i<table_size ; i++){
-    printf("%d,%d,%d,%d\r\n", routing_table[i].dest, routing_table[i].next_hop, routing_table[i].dest_seq_num, routing_table[i].hop_count);
+    printf("[DEBUG-routing-entry] dest: %d | next_hop: %d | hop_count: %d | dest_seq_num: %d | \
+      neighbor_len: %d | lifespan: %d | ssnr2: %d\r\n", 
+      routing_table[i].dest, routing_table[i].next_hop, routing_table[i].hop_count, 
+      routing_table[i].dest_seq_num, routing_table[i].neighbor_len, routing_table[i].lifespan,
+      routing_table[i].ssnr2);
   }
 }
 
