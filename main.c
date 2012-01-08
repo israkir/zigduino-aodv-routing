@@ -366,6 +366,7 @@ void tx_task ()
           printf("[TX-RMSG] txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
           send_packet(tx_buf);
+          RMSG = NULL;
         } else {
           printf("[TX-RMSG] broadcasting rreq...\r\n");
           broadcast_id++;
