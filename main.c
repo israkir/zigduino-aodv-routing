@@ -204,6 +204,8 @@ void rx_task ()
           // create inverse routing entry
           add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi); 
           print_routing_table();
+          add_rreq_to_buffer(&aodvrreq);
+          print_rreq_buffer();
           // this node neighbor of destination, so RREP!
           if ((aodvrreq.dest == find_next_hop(aodvrreq.dest)) || aodvrreq.dest == node_addr) {
             printf("[RX-RREQ] this node is either destination or neighbor of the destination.\r\n");

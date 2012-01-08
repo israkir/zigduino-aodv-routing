@@ -86,11 +86,11 @@ void send_packet(uint8_t *tx_buf);
 void send_rrep(uint8_t *tx_buf, uint8_t next_hop);
 void broadcast_rreq(uint8_t *tx_buf);
 void send_rerr(uint8_t *tx_buf, uint8_t next_hop);
-void set_routing_table();
 uint8_t getuint_8();
 void renew_routing_entry(uint8_t dest, uint8_t dest_seq_num);
 
 int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq);
 int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq);
+void print_rreq_buffer();
 
 #endif

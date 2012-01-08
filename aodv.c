@@ -217,30 +217,7 @@ uint8_t find_next_hop(uint8_t dest){
   return 0; // 0 => did not find in routing table
 }
 
-void set_routing_table()
-{
-  uint8_t i, table_size, dest, nexthop, destseq, hopcount;
-  nrk_kprintf(PSTR ("Enter id (dont use id 0):\r\n"));
-  //id 0 is reserved for the meaning of not exist.
-  node_addr = getuint_8();
-  printf("id = %d\r\n", node_addr);
-  nrk_kprintf(PSTR ("Enter table size:\r\n"));
-  table_size = getuint_8();
-  printf("table size = %d\r\n", table_size);
-  for(i = 0; i < table_size; ++i){
-    nrk_kprintf (PSTR ("Enter dest nexthop destseq hopcount\r\n"));
-    dest = getuint_8();
-    nexthop = getuint_8();
-    destseq = getuint_8();
-    hopcount = getuint_8();
-    printf("%d %d %d %d\r\n", dest, nexthop, destseq, hopcount);
-    add_routing_entry(dest, nexthop, destseq, hopcount, 0);
-  }
-  print_routing_table();
-}
-
 void broadcast_rreq(uint8_t *tx_buf) {
-  // printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = sizeof(tx_buf)+5;
   rfTxInfo.destAddr = 0xffff; // broadcast by default
@@ -254,25 +231,23 @@ void broadcast_rreq(uint8_t *tx_buf) {
     nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
   }
 
-  nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+  nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
 void send_packet(uint8_t *tx_buf){
-  // printf("txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = sizeof(tx_buf)+5;
   rfTxInfo.destAddr = tx_buf[2]; // next_hop
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  //printf( "Sending\r\n" );
   if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
   }else{
     nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
   }
 
-  nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+  nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
 void send_rrep(uint8_t *tx_buf, uint8_t next_hop){
@@ -282,14 +257,13 @@ void send_rrep(uint8_t *tx_buf, uint8_t next_hop){
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  //printf( "Sending\r\n" );
   if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
   }else{
     nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
   }
 
-  nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+  nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
 void send_rerr(uint8_t *tx_buf, uint8_t next_hop){
@@ -299,14 +273,12 @@ void send_rerr(uint8_t *tx_buf, uint8_t next_hop){
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  //printf( "Sending\r\n" );
   if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
   }else{
     nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
   }
-
-  nrk_kprintf (PSTR ("Tx task sent data!\r\n"));
+  nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
 
@@ -341,5 +313,16 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
         return 0;
       }
     }
+  }
+}
+
+void print_rreq_buffer() {
+  int i;
+  for (i=0; i<rreq_buffer_size; i++) {
+    printf("[DEBUG-rreq-buffer] type: %d | broadcast_id: %d | src: %d | src_seq_num: %d | \
+      dest: %d | dest_seq_num: %d | hop_count: %d\r\n", 
+      rreq_buffer[i].type, rreq_buffer[i].broadcast_id, rreq_buffer[i].src, 
+      rreq_buffer[i].src_seq_num, rreq_buffer[i].dest, rreq_buffer[i].dest_seq_num,
+      rreq_buffer[i].hop_count);
   }
 }
