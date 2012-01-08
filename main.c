@@ -12,6 +12,9 @@
 #include <adc_driver.h>
 #include "my_basic_rf.h"
 
+#define SRC_ADDR 5
+#define DEST_ADDR 6
+
 nrk_task_type RX_TASK;
 NRK_STK rx_task_stack[NRK_APP_STACKSIZE];
 void rx_task (void);
@@ -71,14 +74,14 @@ int main ()
   // init a unique id for this node
 
   if (WHOAMI == "source") {
-    node_addr = 5;
+    node_addr = SRC_ADDR;
   } else if (WHOAMI == "destination") {
-    node_addr = 6;
+    node_addr = DEST_ADDR;
   } else {
     init_srand_seed();
     node_addr = (rand() % 1000) + 7;
   }
-  printf(WHOAMI);
+  
   printf("My addr is: %d\r\n", node_addr);
 
   nrk_init ();
@@ -182,7 +185,7 @@ void rx_task ()
               aodvrreq.src = aodvmsg.src;
               aodvrreq.src_seq_num = 1; 
               aodvrreq.dest = aodvmsg.dest;
-              aodvrreq.dest_seq_num = 0; // 0 means unknown.
+              aodvrreq.dest_seq_num = dest_seq_num;
               aodvrreq.hop_count = 1;
               // set flag for tx_task, so tx_task can broadcast!
               RREQ = &aodvrreq;
@@ -201,19 +204,21 @@ void rx_task ()
         // if received rreq is valid, then process it!
         // valid: this node did not received a RREQ with the same broadcast_id & source addr
         if (check_rreq_is_valid(&aodvrreq) != -1) {
+          printf("check is valid - adding the request to routing entry\r\n");
           // create inverse routing entry
           add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi);         
           // this node neighbor of destination, so RREP!
           if ((aodvrreq.dest == find_next_hop(aodvrreq.dest)) || aodvrreq.dest == node_addr) {
-            if (dest_seq_num < aodvrreq.dest_seq_num) {
+            printf("this node is either destination or neighbor of the destination.\r\n");
+            if ((dest_seq_num < aodvrreq.dest_seq_num) || (aodvrreq.dest_seq_num == 0)) {
               aodvrrep.type = 2;
               aodvrrep.src = aodvrreq.src;
               aodvrrep.dest = aodvrreq.dest;
-              aodvrrep.dest_seq_num = dest_seq_num;
+              aodvrrep.dest_seq_num = ++dest_seq_num;
               aodvrrep.hop_count = 1;
               RREQ = NULL;
               RREP = &aodvrrep;
-              nrk_event_signal(SIG(signal_send_packet));
+              // nrk_event_signal(SIG(signal_send_packet));
             } else {
               // this node is not neighbor to destination, so propagate RREQ!
               RREP = NULL;
@@ -363,7 +368,7 @@ void tx_task ()
           aodvrreq.src = aodvmsg.src;
           aodvrreq.src_seq_num = 1; 
           aodvrreq.dest = aodvmsg.dest;
-          aodvrreq.dest_seq_num = 0; // 0 means unknown.
+          aodvrreq.dest_seq_num = dest_seq_num;
           aodvrreq.hop_count = 1;
           // set flag for tx_task, so tx_task can broadcast!
           RREQ = &aodvrreq;
@@ -420,8 +425,8 @@ void serial_task()
       ret = scanf("%c", &c);
       msg[0] = c;
       aodvmsg.type = 0;
-      aodvmsg.src = 5;
-      aodvmsg.dest = 6;
+      aodvmsg.src = SRC_ADDR;
+      aodvmsg.dest = DEST_ADDR;
       aodvmsg.msg_len = 1;
       aodvmsg.msg_seq_no = msg_seq_no++;
       aodvmsg.msg = msg;
