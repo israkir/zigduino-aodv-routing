@@ -69,6 +69,7 @@ int main ()
   nrk_setup_uart (UART_BAUDRATE_115K2);
   
   // init a unique id for this node
+
   if (WHOAMI == "source") {
     node_addr = 5;
   } else if (WHOAMI == "destination") {
@@ -104,6 +105,7 @@ void rx_task ()
   AODV_RERR_INFO aodvrerr;
 
   printf ("rx_task PID=%d\r\n", nrk_get_pid ());
+
 
   // set_routing_table();
   // Init basic rf 
@@ -255,6 +257,7 @@ void rx_task ()
         RREP = NULL;
       }
     } else if(type == 3) { //RERR
+
   
     unpack_aodv_rerr (local_rx_buf, &aodvrerr);
     printf("type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
@@ -283,9 +286,11 @@ void rx_task ()
 
     //printf ("Got RX packet len=%d RSSI=%d [", len, rssi);
     //for (i = 0; i < len; i++)
-    //	printf ("%c", rx_buf[i]);
+
+    //printf ("%c", rx_buf[i]);
     //printf ("]\r\n");
     nrk_led_clr (RFRX_LED);
+
     /*nrk_event_wait(SIG(rx_signal));*/
   }
 }
@@ -349,13 +354,15 @@ void tx_task ()
       is_broadcasting = 1;
       RREQ = NULL;
     }
-	
+
+
     if (RERR) {
       aodvrerr = *RERR;
       pack_aodv_rerr(tx_buf, aodvrerr);
       send_rerr(tx_buf, sizeof(tx_buf), find_next_hop(aodvrerr.src));
       RERR = NULL;
     }
+
 
     if (RMSG) {
       aodvmsg = *RMSG;
@@ -382,6 +389,7 @@ void tx_task ()
       }
     }
 
+
     nrk_led_clr(RFTX_LED);
     nrk_wait_until_next_period();
   }
@@ -397,9 +405,9 @@ void serial_task()
   AODV_MSG_INFO aodvmsg;
 
   // Get the signal for UART RX
-	uart_rx_signal=nrk_uart_rx_signal_get();
-	// Register task to wait on signal
-	nrk_signal_register(uart_rx_signal);
+    uart_rx_signal=nrk_uart_rx_signal_get();
+     // Register task to wait on signal
+    nrk_signal_register(uart_rx_signal);
     
   int ret = -3;
   int msg_seq_no = 0;
