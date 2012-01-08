@@ -414,7 +414,7 @@ void serial_task()
   int ret = -3;
   int msg_seq_no = 0;
   
-  while(1) {
+  while(strcmp(WHOAMI, "destination") != 0) {
     printf("ready to read...\r\n");
     if (nrk_uart_data_ready(NRK_DEFAULT_UART)) {
       ret = scanf("%c", &c);
