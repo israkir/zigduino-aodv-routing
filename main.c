@@ -315,7 +315,7 @@ void tx_task ()
   while (1) {
 
     nrk_led_set(RFTX_LED);
-    nrk_event_wait(SIG(signal_send_packet));
+    /*nrk_event_wait(SIG(signal_send_packet));*/
     printf("in tx_task\r\n");
 
     // RACK
