@@ -344,28 +344,8 @@ void tx_task ()
       RREP = NULL;
     }
 
-    if (RREQ) {
-      if (strcmp(WHOAMI, "source") == 0) {
-        node_seq_num++;
-      }
-      aodvrreq = *RREQ;
-      pack_aodv_rreq(tx_buf, aodvrreq);
-      broadcast_rreq(tx_buf, sizeof(tx_buf));
-      is_broadcasting = 1;
-      RREQ = NULL;
-    }
-
-
-    if (RERR) {
-      aodvrerr = *RERR;
-      pack_aodv_rerr(tx_buf, aodvrerr);
-      send_rerr(tx_buf, sizeof(tx_buf), find_next_hop(aodvrerr.src));
-      RERR = NULL;
-    }
-
-
     if (RMSG) {
-      aodvmsg = *RMSG;
+      aodvmsg = *RMSG;  
       if (!is_broadcasting) {
         if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
           pack_aodv_msg(tx_buf, aodvmsg);
@@ -384,11 +364,27 @@ void tx_task ()
           aodvrreq.hop_count = 1;
           // set flag for tx_task, so tx_task can broadcast!
           RREQ = &aodvrreq;
-          nrk_event_signal(SIG(signal_send_packet));
         }
       }
     }
+    
+    if (RREQ) {
+      if (strcmp(WHOAMI, "source") == 0) {
+        node_seq_num++;
+      }
+      aodvrreq = *RREQ;
+      pack_aodv_rreq(tx_buf, aodvrreq);
+      broadcast_rreq(tx_buf, sizeof(tx_buf));
+      is_broadcasting = 1;
+      RREQ = NULL;
+    }
 
+    if (RERR) {
+      aodvrerr = *RERR;
+      pack_aodv_rerr(tx_buf, aodvrerr);
+      send_rerr(tx_buf, sizeof(tx_buf), find_next_hop(aodvrerr.src));
+      RERR = NULL;
+    }
 
     nrk_led_clr(RFTX_LED);
     nrk_wait_until_next_period();
