@@ -355,6 +355,7 @@ void tx_task ()
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
           send_packet(tx_buf, sizeof(tx_buf)+5);
         } else {
+          printf("broadcasting rreq...\r\n");
           broadcast_id++;
           // construct RREQ message
           aodvrreq.type = 1;
