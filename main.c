@@ -117,14 +117,11 @@ void rx_task ()
 
   rf_polling_rx_on();
   
-  printf( "[DEBUG-RX] Waiting for packet...\r\n" );
-  
   nrk_sig_t rx_signal;
   // Get the signal for radio RX
   rx_signal = nrk_rx_signal_get();
   // Register task to wait on signal
   nrk_signal_register(rx_signal);	
-  printf("[DEBUG-RX] rx before while loop\r\n");
   // set rf ready flag
   rf_ok = 1;
 
@@ -143,7 +140,7 @@ void rx_task ()
       // Get the aodv msg type 
       type = get_msg_type(local_rx_buf);
 
-      if (type == 0){ //normal msg
+      if (type == 0) { //normal msg
         unpack_aodv_msg (local_rx_buf, &aodvmsg, rxmsg);
         printf("[RX-RMSG] type = %d, src = %d, nexthop = %d, dest = %d, msg_len = %d, msg = %s\r\n", aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.msg_len, aodvmsg.msg);
 
@@ -182,18 +179,17 @@ void rx_task ()
             }
           }
         }
-      }
-    } else if(type == 1) { // RREQ
+      } else if(type == 1) { // RREQ
         unpack_aodv_rreq(local_rx_buf, &aodvrreq);
-        // if received rreq is valid, then process it!
-        // valid: this node did not received a RREQ with the same broadcast_id & source addr
+        printf("[RX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
+
+        // valid: this node did not received a RREQ with greater broadcast_id & source addr
         if (check_rreq_is_valid(&aodvrreq) != -1) {
-          add_rreq_to_buffer(&aodvrreq);
-          print_rreq_buffer();
           printf("[RX-RREQ] check is valid - adding the request to routing entry\r\n");
           // create inverse routing entry
           add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi); 
           print_routing_table();
+
           // this node neighbor of destination, so RREP!
           if ((aodvrreq.dest == find_next_hop(aodvrreq.dest)) || aodvrreq.dest == node_addr) {
             printf("[RX-RREQ] this node is either destination or neighbor of the destination.\r\n");
@@ -207,12 +203,12 @@ void rx_task ()
               RREQ = NULL;
               RREP = &aodvrrep;
             } else {
-              printf("[RX-RREQ] this node is NOT the destination or neighbor of the destination.\r\n");
+              printf("[RX-RREQ] invalid rreq...\r\n");
               RREP = NULL;
-              aodvrreq.hop_count += 1;
-              RREQ = &aodvrreq;
+              RREQ = NULL;
             }
           }
+        }
       } else if(type == 2) { // RREP
         unpack_aodv_rrep (local_rx_buf, &aodvrrep);
         printf("[RX-RREP] type = %d, src = %d, dest = %d, dest_seq_num = %d, hop_count = %d, lifespan = %d\r\n", aodvrrep.type, aodvrrep.src, aodvrrep.dest, aodvrrep.dest_seq_num, aodvrrep.hop_count, aodvrrep.lifespan);
@@ -265,20 +261,8 @@ void rx_task ()
           //For first time discovery
           add_routing_entry(aodvrreq.dest, aodvrreq.dest, aodvrreq.broadcast_id, aodvrreq.hop_count, rfRxInfo.rssi);
         } */
-      } else {
-        nrk_kprintf( PSTR("[DEBUG] unknown type\r\n"));
-      }
-
-      //printf ("Got RX packet len=%d RSSI=%d [", len, rssi);
-      //for (i = 0; i < len; i++)
-
-      //printf ("%c", rx_buf[i]);
-      //printf ("]\r\n");
-      /*nrk_event_wait(SIG(rx_signal));*/
-
-    } else if(n == NRK_ERROR) {
-      printf( "[DEBUG-RX] CRC failed!\r\n" );
-    }
+      } else nrk_kprintf( PSTR("[DEBUG] unknown type\r\n"));
+    } else if(n == NRK_ERROR) printf( "[DEBUG-RX] CRC failed!\r\n" );
   }
 }
 
