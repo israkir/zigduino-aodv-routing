@@ -88,6 +88,8 @@ int main ()
     node_addr = (rand() % 1000) + 7;
   }
   
+  timeout_t.secs = 0;
+  timeout_t.nano_secs = 10;
   buffer_semaphore = nrk_sem_create(1,4);
   
   printf("[DEBUG-main] My addr is: %d\r\n", node_addr);

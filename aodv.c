@@ -18,6 +18,8 @@ uint8_t node_seq_num = 1;
 uint8_t dest_seq_num = 0;
 AODV_RREQ_INFO rreq_buffer[RREQ_BUFFER_SIZE];
 
+nrk_time_t timeout_t;
+
 uint8_t aodv_id;
 uint8_t table_size = 0;
 uint8_t rreq_buffer_size = 0;
@@ -225,12 +227,10 @@ void broadcast_rreq(uint8_t *tx_buf) {
   rfTxInfo.ackRequest = 1;
 
   // printf( "Sending\r\n" );
-  if(rf_tx_packet(&rfTxInfo) != 1){
+  while(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
-  }else{
-    nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
+    nrk_wait(timeout_t);
   }
-
   nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
@@ -241,12 +241,10 @@ void send_packet(uint8_t *tx_buf){
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  if(rf_tx_packet(&rfTxInfo) != 1){
+  while(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
-  }else{
-    nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
+    nrk_wait(timeout_t);
   }
-
   nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
@@ -257,12 +255,10 @@ void send_rrep(uint8_t *tx_buf, uint8_t next_hop){
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  if(rf_tx_packet(&rfTxInfo) != 1){
+  while(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
-  }else{
-    nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
+    nrk_wait(timeout_t);
   }
-
   nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
@@ -273,10 +269,9 @@ void send_rerr(uint8_t *tx_buf, uint8_t next_hop){
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  if(rf_tx_packet(&rfTxInfo) != 1){
+  while(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
-  }else{
-    nrk_kprintf (PSTR ("--- RF_TX ACK!! ---\r\n"));
+    nrk_wait(timeout_t);
   }
   nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
