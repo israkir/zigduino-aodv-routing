@@ -519,17 +519,17 @@ int8_t rf_rx_packet_nonblock()
   
   uint8_t *frame_start = &TRXFBST;
 
-  if(!rf_ready)
+  if(!rf_ready) {
+    printf("[RX-BASIC_RF] rf_ready is not ready\r\n");
     return NRK_ERROR;
-  printf("rf_ready\r\n");
+  }
 
   if(!rx_ready)
     return 0;
   else if((TST_RX_LENGTH - 2) > rfSettings.pRxInfo->max_length) {
-    printf("rx_ready not ready\r\n");
+    printf("[RX-BASIC_RF] rx_ready not ready\r\n");
     return NRK_ERROR;
   }
-  printf("rx_ready and received a frame\r\n");
 
   ieee_mac_frame_header_t *machead = frame_start;
 
@@ -542,7 +542,7 @@ int8_t rf_rx_packet_nonblock()
     rx_ready = 0;
     TRX_CTRL_2 &= ~(1 << RX_SAFE_MODE);
     TRX_CTRL_2 |= (1 << RX_SAFE_MODE);
-    printf("frame size is incorrect\r\n");
+    printf("[RX-BASIC_RF] frame size is incorrect\r\n");
     return NRK_ERROR;
   }
 
