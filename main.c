@@ -148,8 +148,7 @@ void rx_task ()
           // this AODV msg is for this node, so process it!
           if(aodvmsg.dest == node_addr){
             // this node is destination, so print received packet
-            printf("[RX-DATA] type = %d, src = %d, nexthop = %d, dest = %d, msg_len = %d, msg = %s\r\n", 
-              aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.msg_len, aodvmsg.msg);
+            printf("[RX-DATA] %s\r\n", aodvmsg.msg);
           } else {
             // this node is not destination, so send it to neighbor
             if((next_hop = find_next_hop(aodvmsg.dest)) != 0){
@@ -157,7 +156,7 @@ void rx_task ()
               repack_forward_msg(local_rx_buf, aodvmsg, next_hop);
               send_packet(local_rx_buf);
             } else {
-              // routing information is not found in the routing table, so issue a new RREQ!
+              // routing information is not found in the routing table, so issue a new RREQ! might not happen at all.
               if (aodvmsg.src == node_addr) {
                 broadcast_id++;
                 // construct RREQ message
@@ -374,8 +373,8 @@ void serial_task()
       aodvmsg.type = 0;
       aodvmsg.src = SRC_ADDR;
       aodvmsg.dest = DEST_ADDR;
-      aodvmsg.msg_len = 1;
       aodvmsg.msg_seq_no = msg_seq_no++;
+      aodvmsg.msg_len = 1;
       aodvmsg.msg = msg;
       RMSG = &aodvmsg;
       printf("[DEBUG-serial] ret: %d || char: %c\r\n", ret, c);

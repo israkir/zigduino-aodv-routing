@@ -166,9 +166,10 @@ void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg){
   aodvmsg->src  = rx_buf[1];
   aodvmsg->next_hop = rx_buf[2];
   aodvmsg->dest = rx_buf[3];
-  aodvmsg->msg_len = rx_buf[4];
+  aodvmsg->msg_seq_no = tx_buf[4];
+  aodvmsg->msg_len = rx_buf[5];
   aodvmsg->msg = msg;
-  memcpy(msg, rx_buf+5, aodvmsg->msg_len);
+  memcpy(msg, rx_buf+6, aodvmsg->msg_len);
 }
 
 void pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg){
@@ -176,8 +177,9 @@ void pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg){
   tx_buf[1] = aodvmsg.src;
   tx_buf[2] = aodvmsg.next_hop;
   tx_buf[3] = aodvmsg.dest;
-  tx_buf[4] = aodvmsg.msg_len;
-  memcpy(tx_buf+5, aodvmsg.msg, aodvmsg.msg_len);
+  tx_buf[4] = aodvmsg.msg_seq_no;
+  tx_buf[5] = aodvmsg.msg_len;
+  memcpy(tx_buf+6, aodvmsg.msg, aodvmsg.msg_len);
 }
 
 void unpack_aodv_rerr(uint8_t* rx_buf, AODV_RERR_INFO* aodvrerr){
