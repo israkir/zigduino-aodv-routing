@@ -318,7 +318,9 @@ void tx_task ()
     if (new_msg_len > 0) {
       // critical section start
       nrk_sem_pend(buffer_semaphore);
+      printf("[TX] new_msg_len = %d\r\n", new_msg_len);
       memcpy(msg, new_msg, new_msg_len);
+      memset(new_msg, 0, new_msg_len);
       new_msg_len = 0;
       nrk_sem_post(buffer_semaphore);
       // critical section end

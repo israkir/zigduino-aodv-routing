@@ -379,8 +379,10 @@ uint8_t rf_tx_packet_repeat(RF_TX_INFO *pRTI, uint16_t ms)
   uint8_t trx_status, trx_error, *data_start, *frame_start = &TRXFBST;
   uint16_t i;
 
-  if(!rf_ready)
+  if(!rf_ready) {
+    printf("[TX-BASIC_RF] rf_ready is not ready\r\n");
     return NRK_ERROR;
+  }
 
   ieee_mac_frame_header_t *machead = frame_start + 1;
   ieee_mac_fcf_t fcf;
@@ -423,6 +425,7 @@ uint8_t rf_tx_packet_repeat(RF_TX_INFO *pRTI, uint16_t ms)
   /* Return error if radio not in a tx-ready state */
   if((trx_status != TRX_OFF) && (trx_status != RX_ON) 
       && (trx_status != RX_AACK_ON) && (trx_status != PLL_ON)){
+    printf("[TX-BASIC_RF] radio is not in a tx-ready state\r\n");
     return NRK_ERROR;
   }
 
@@ -433,8 +436,10 @@ uint8_t rf_tx_packet_repeat(RF_TX_INFO *pRTI, uint16_t ms)
     PHY_CC_CCA |= (1 << CCA_REQUEST);
     while(!(TRX_STATUS & (1 << CCA_DONE)))
       continue;
-    if(!(TRX_STATUS & (1 << CCA_STATUS)))
+    if(!(TRX_STATUS & (1 << CCA_STATUS))) {
+      printf("[TX-BASIC_RF] CCA couldn't perform correctly\r\n");
       return NRK_ERROR;
+    }
   }
 
   rf_cmd(PLL_ON);

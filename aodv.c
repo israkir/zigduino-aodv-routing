@@ -228,7 +228,7 @@ void broadcast_rreq(uint8_t *tx_buf) {
   rfTxInfo.ackRequest = 1;
 
   // printf( "Sending\r\n" );
-  if(rf_tx_packet_repeat(&rfTxInfo, timeout) != 1){
+  if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
     nrk_wait(timeout_t);
   }
@@ -243,7 +243,7 @@ void send_packet(uint8_t *tx_buf){
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  if(rf_tx_packet_repeat(&rfTxInfo, timeout) != 1){
+  if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
     nrk_wait(timeout_t);
   }
@@ -258,7 +258,7 @@ void send_rrep(uint8_t *tx_buf, uint8_t next_hop){
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  if(rf_tx_packet_repeat(&rfTxInfo, timeout) != 1){
+  if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
     nrk_wait(timeout_t);
   }
@@ -273,7 +273,7 @@ void send_rerr(uint8_t *tx_buf, uint8_t next_hop){
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
-  if(rf_tx_packet_repeat(&rfTxInfo, timeout) != 1){
+  if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
     nrk_wait(timeout_t);
   }
