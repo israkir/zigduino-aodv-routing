@@ -328,6 +328,7 @@ void tx_task ()
       aodvmsg.msg_len = 1;
       aodvmsg.msg = msg;
       RMSG = &aodvmsg;
+      printf("[TX] msg = %s.\r\n", msg);
     }
     
     if (RREP) {
