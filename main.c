@@ -84,8 +84,9 @@ int main ()
   } else if (WHOAMI == "destination") {
     node_addr = DEST_ADDR;
   } else {
-    init_srand_seed();
-    node_addr = (rand() % 1000) + 7;
+    /*init_srand_seed();*/
+    /*node_addr = (rand() % 1000) + 7;*/
+    node_addr = 111;
   }
   
   timeout_t.secs = 0;
