@@ -84,9 +84,9 @@ int main ()
   } else if (WHOAMI == "destination") {
     node_addr = DEST_ADDR;
   } else {
-    /*init_srand_seed();*/
-    /*node_addr = (rand() % 1000) + 7;*/
-    node_addr = 111;
+    init_srand_seed();
+    node_addr = (rand() % 1000) + 7;
+    /*node_addr = 111;*/
   }
   
   timeout_t.secs = 0;
@@ -202,9 +202,9 @@ void rx_task ()
 
         // DEBUG PURPOSE for 3 nodes, so it will force routing through the
         // third intermediate node
-        if (strcmp(WHOAMI, "destination") == 0 && rfRxInfo.srcAddr == SRC_ADDR) {
-          continue;
-        }
+        /*if (strcmp(WHOAMI, "destination") == 0 && rfRxInfo.srcAddr == SRC_ADDR) {*/
+          /*continue;*/
+        /*}*/
 
         // valid: this node did not received a RREQ with greater broadcast_id & source addr
         if (check_rreq_is_valid(&aodvrreq) != -1) {
