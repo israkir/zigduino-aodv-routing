@@ -162,7 +162,9 @@ void rx_task ()
           // this AODV msg is for this node, so process it!
           if(aodvmsg.dest == node_addr){
             // this node is destination, so print received packet
-            printf("[RX-DATA] %s\r\n", aodvmsg.msg);
+            printf("[RX-DATA] ");
+            for(i=0; i<aodvmsg.msg_len; i++ ) printf("[%d]", rxmsg[i]);
+            printf("\r\n");
             memset(rxmsg, 0, aodvmsg.msg_len);
           } else {
             // this node is not destination, so send it to neighbor
