@@ -154,7 +154,8 @@ void rx_task ()
             if((next_hop = find_next_hop(aodvmsg.dest)) != 0){
               printf("[RX-DATA] sendmsg to %d\r\n", next_hop);
               repack_forward_msg(local_rx_buf, aodvmsg, next_hop);
-              send_packet(local_rx_buf);
+              RMSG = &aodvmsg;
+              /*send_packet(local_rx_buf);*/
             } else {
               // routing information is not found in the routing table, so issue a new RREQ! might not happen at all.
               if (aodvmsg.src == node_addr) {
