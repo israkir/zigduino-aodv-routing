@@ -15,6 +15,9 @@
 #define SRC_ADDR 5
 #define DEST_ADDR 6
 
+#define MAX_NEW_MSG_LEN 128
+#define MAX_MSG_LEN 128
+
 nrk_task_type RX_TASK;
 NRK_STK rx_task_stack[NRK_APP_STACKSIZE];
 void rx_task (void);
@@ -27,10 +30,16 @@ nrk_task_type SERIAL_TASK;
 NRK_STK serial_task_stack[NRK_APP_STACKSIZE];
 void serial_task(void);
 
-void nrk_create_taskset ();
+void nrk_create_taskset();
 
-uint8_t rxmsg[100];
-uint8_t msg[32];
+nrk_sem_t *buffer_semaphore;
+
+uint8_t rxmsg[MAX_MSG_LEN];
+uint8_t msg[MAX_MSG_LEN];
+uint8_t new_msg[MAX_NEW_MSG_LEN];
+
+uint8_t new_msg_len = 0;
+uint8_t msg_seq_no = 0;
 uint8_t is_broadcasting = 0;
 
 RF_TX_INFO rfTxInfo;
@@ -79,8 +88,10 @@ int main ()
     node_addr = (rand() % 1000) + 7;
   }
   
+  buffer_semaphore = nrk_sem_create(1,4);
+  
   printf("[DEBUG-main] My addr is: %d\r\n", node_addr);
-
+  
   nrk_init ();
   nrk_time_set (0, 0);
 
@@ -281,9 +292,22 @@ void tx_task ()
   printf ("[DEBUG-TX] tx_task PID=%d\r\n", nrk_get_pid ());
 
   while (1) {
-
-    /*printf("in tx_task\r\n");*/
-
+    if (new_msg_len > 0) {
+      // critical section start
+      nrk_sem_pend(buffer_semaphore);
+      memcpy(msg, new_msg, new_msg_len);
+      new_msg_len = 0;
+      nrk_sem_post(buffer_semaphore);
+      // critical section end
+      aodvmsg.type = 0;
+      aodvmsg.src = SRC_ADDR;
+      aodvmsg.dest = DEST_ADDR;
+      aodvmsg.msg_seq_no = msg_seq_no++;
+      aodvmsg.msg_len = 1;
+      aodvmsg.msg = msg;
+      RMSG = &aodvmsg;
+    }
+    
     if (RREP) {
       printf("[TX-RREP] inside the condition.\r\n");
       if (strcmp(WHOAMI, "destination") == 0) {
@@ -364,20 +388,17 @@ void serial_task()
   nrk_signal_register(uart_rx_signal);
     
   int ret = -3;
-  int msg_seq_no = 0;
   
   while(strcmp(WHOAMI, "destination") != 0) {
     printf("[DEBUG-serial] ready to read...\r\n");
     if (nrk_uart_data_ready(NRK_DEFAULT_UART)) {
       ret = scanf("%c", &c);
-      msg[0] = c;
-      aodvmsg.type = 0;
-      aodvmsg.src = SRC_ADDR;
-      aodvmsg.dest = DEST_ADDR;
-      aodvmsg.msg_seq_no = msg_seq_no++;
-      aodvmsg.msg_len = 1;
-      aodvmsg.msg = msg;
-      RMSG = &aodvmsg;
+      // critical section start
+      nrk_sem_pend(buffer_semaphore);
+      new_msg[new_msg_len] = c;
+      new_msg_len++;
+      nrk_sem_post(buffer_semaphore);
+      // critical section end
       printf("[DEBUG-serial] ret: %d || char: %c\r\n", ret, c);
     } else {
       printf("[DEBUG-serial] ready to wait...\r\n");
