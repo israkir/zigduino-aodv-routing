@@ -163,7 +163,7 @@ void rx_task ()
           if(aodvmsg.dest == node_addr){
             // this node is destination, so print received packet
             printf("[RX-DATA] ");
-            for(i=0; i<aodvmsg.msg_len; i++ ) printf("[%d]", rxmsg[i]);
+            for(i=0; i<aodvmsg.msg_len; i++ ) printf("[%c]", aodvmsg.msg[i]);
             printf("\r\n");
             memset(rxmsg, 0, aodvmsg.msg_len);
           } else {
