@@ -133,13 +133,14 @@ void unpack_aodv_rrep(uint8_t* rx_buf, AODV_RREP_INFO* aodvrrep){
   aodvrrep->lifespan = rx_buf[5];
 }
 
-void pack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep){
+uint8_t pack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep){
   tx_buf[0] = aodvrrep.type;
   tx_buf[1] = aodvrrep.src;
   tx_buf[2] = aodvrrep.dest;
   tx_buf[3] = aodvrrep.dest_seq_num;
   tx_buf[4] = aodvrrep.hop_count;
   tx_buf[5] = aodvrrep.lifespan;
+  return 6;
 }
 
 void unpack_aodv_rreq(uint8_t* rx_buf, AODV_RREQ_INFO* aodvrreq){
@@ -152,7 +153,7 @@ void unpack_aodv_rreq(uint8_t* rx_buf, AODV_RREQ_INFO* aodvrreq){
   aodvrreq->hop_count = rx_buf[6];
 }
 
-void pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq){
+uint8_t pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq){
   tx_buf[0] = aodvrreq.type;
   tx_buf[1] = aodvrreq.broadcast_id;
   tx_buf[2] = aodvrreq.src;
@@ -160,6 +161,7 @@ void pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq){
   tx_buf[4] = aodvrreq.dest;
   tx_buf[5] = aodvrreq.dest_seq_num;
   tx_buf[6] = aodvrreq.hop_count;
+  return 7;
 }
 
 void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg){
@@ -173,7 +175,7 @@ void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg){
   memcpy(msg, rx_buf+6, aodvmsg->msg_len);
 }
 
-void pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg){
+uint8_t pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg){
   tx_buf[0] = aodvmsg.type;
   tx_buf[1] = aodvmsg.src;
   tx_buf[2] = aodvmsg.next_hop;
@@ -181,6 +183,7 @@ void pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg){
   tx_buf[4] = aodvmsg.msg_seq_no;
   tx_buf[5] = aodvmsg.msg_len;
   memcpy(tx_buf+6, aodvmsg.msg, aodvmsg.msg_len);
+  return 6+aodvmsg.msg_len;
 }
 
 void unpack_aodv_rerr(uint8_t* rx_buf, AODV_RERR_INFO* aodvrerr){
@@ -190,11 +193,12 @@ void unpack_aodv_rerr(uint8_t* rx_buf, AODV_RERR_INFO* aodvrerr){
   aodvrerr->src = rx_buf[3];
 }
 
-void pack_aodv_rerr(uint8_t* tx_buf, AODV_RERR_INFO aodvrerr){
+uint8_t pack_aodv_rerr(uint8_t* tx_buf, AODV_RERR_INFO aodvrerr){
   tx_buf[0] = aodvrerr.type;
   tx_buf[1] = aodvrerr.dest;
   tx_buf[2] = aodvrerr.dest_seq;
   tx_buf[3] = aodvrerr.src;
+  return 4;
 }
 
 void repack_forward_msg(uint8_t* buf, AODV_MSG_INFO aodvmsg, uint8_t next_hop){
@@ -220,9 +224,9 @@ uint8_t find_next_hop(uint8_t dest){
   return 0; // 0 => did not find in routing table
 }
 
-void broadcast_rreq(uint8_t *tx_buf) {
+void broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
   rfTxInfo.pPayload = tx_buf;
-  rfTxInfo.length = sizeof(tx_buf)+5;
+  rfTxInfo.length = length+5;
   rfTxInfo.destAddr = 0xffff; // broadcast by default
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
@@ -236,9 +240,9 @@ void broadcast_rreq(uint8_t *tx_buf) {
     nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
-void send_packet(uint8_t *tx_buf){
+void send_packet(uint8_t *tx_buf, uint8_t length){
   rfTxInfo.pPayload = tx_buf;
-  rfTxInfo.length = sizeof(tx_buf)+5;
+  rfTxInfo.length = length+5;
   rfTxInfo.destAddr = tx_buf[2]; // next_hop
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
@@ -251,9 +255,9 @@ void send_packet(uint8_t *tx_buf){
     nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
-void send_rrep(uint8_t *tx_buf, uint8_t next_hop){
+void send_rrep(uint8_t *tx_buf, uint8_t next_hop, uint8_t length){
   rfTxInfo.pPayload = tx_buf;
-  rfTxInfo.length = sizeof(tx_buf)+5;
+  rfTxInfo.length = length+5;
   rfTxInfo.destAddr = next_hop;
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
@@ -266,9 +270,9 @@ void send_rrep(uint8_t *tx_buf, uint8_t next_hop){
     nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
 }
 
-void send_rerr(uint8_t *tx_buf, uint8_t next_hop){
+void send_rerr(uint8_t *tx_buf, uint8_t next_hop, uint8_t length){
   rfTxInfo.pPayload = tx_buf;
-  rfTxInfo.length = sizeof(tx_buf)+5;
+  rfTxInfo.length = length+5;
   rfTxInfo.destAddr = next_hop;
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;

@@ -68,10 +68,10 @@ void unpack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO* aodvrrep);
 void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg);
 void unpack_aodv_rerr(uint8_t* rx_buf, AODV_RERR_INFO* aodvrerr);
 
-void pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq);
-void pack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep);
-void pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg);
-void pack_aodv_rerr(uint8_t* tx_buf, AODV_RERR_INFO aodvrerr);
+uint8_t pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq);
+uint8_t pack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep);
+uint8_t pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg);
+uint8_t pack_aodv_rerr(uint8_t* tx_buf, AODV_RERR_INFO aodvrerr);
 
 void repack_forward_msg(uint8_t* buf, AODV_MSG_INFO aodvmsg, uint8_t next_hop);
 
@@ -83,10 +83,10 @@ void print_routing_table();
 uint8_t find_index(uint8_t dest, uint8_t dest_seq_num);
 uint8_t find_next_hop(uint8_t dest);
 
-void send_packet(uint8_t *tx_buf);
-void send_rrep(uint8_t *tx_buf, uint8_t next_hop);
-void broadcast_rreq(uint8_t *tx_buf);
-void send_rerr(uint8_t *tx_buf, uint8_t next_hop);
+void send_packet(uint8_t *tx_buf, uint8_t length);
+void send_rrep(uint8_t *tx_buf, uint8_t next_hop, uint8_t length);
+void broadcast_rreq(uint8_t *tx_buf, uint8_t length);
+void send_rerr(uint8_t *tx_buf, uint8_t next_hop, uint8_t length);
 uint8_t getuint_8();
 void renew_routing_entry(uint8_t dest, uint8_t dest_seq_num);
 

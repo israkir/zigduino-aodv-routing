@@ -346,8 +346,8 @@ void tx_task ()
         node_seq_num++;
       }
       aodvrrep = *RREP;
-      pack_aodv_rrep(tx_buf, aodvrrep);
-      send_rrep(tx_buf, find_next_hop(aodvrrep.src));
+      uint8_t len = pack_aodv_rrep(tx_buf, aodvrrep);
+      send_rrep(tx_buf, find_next_hop(aodvrrep.src), len);
       RREP = NULL;
     }
 
@@ -356,10 +356,10 @@ void tx_task ()
       aodvmsg = *RMSG;  
       if (!source_broadcasting || WHOAMI != "source") {
         if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
-          pack_aodv_msg(tx_buf, aodvmsg);
+          uint8_t len = pack_aodv_msg(tx_buf, aodvmsg);
           printf("[TX-RMSG] txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
-          send_packet(tx_buf);
+          send_packet(tx_buf, len);
           RMSG = NULL;
         } else {
           printf("[TX-RMSG] broadcasting rreq...\r\n");
@@ -387,8 +387,8 @@ void tx_task ()
       printf("[TX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, src_seq_num = %d, \
         dest = %d, dest_seq_num = %d, hop_count = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, 
         aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
-      pack_aodv_rreq(tx_buf, aodvrreq);
-      broadcast_rreq(tx_buf);
+      uint8_t len = pack_aodv_rreq(tx_buf, aodvrreq);
+      broadcast_rreq(tx_buf, len);
       source_broadcasting = 1;
       RREQ = NULL;
     }
@@ -396,8 +396,8 @@ void tx_task ()
     if (RERR) {
       printf("[TX-RERR] inside the condition.\r\n");
       aodvrerr = *RERR;
-      pack_aodv_rerr(tx_buf, aodvrerr);
-      send_rerr(tx_buf, find_next_hop(aodvrerr.src));
+      uint8_t len = pack_aodv_rerr(tx_buf, aodvrerr);
+      send_rerr(tx_buf, find_next_hop(aodvrerr.src), len);
       RERR = NULL;
     }
 
