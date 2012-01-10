@@ -311,6 +311,8 @@ void tx_task ()
   AODV_RREP_INFO aodvrack;
   AODV_RERR_INFO aodvrerr;
 
+  uint8_t i;
+
   while(!rf_ok) {
     nrk_wait_until_next_period();
   }
