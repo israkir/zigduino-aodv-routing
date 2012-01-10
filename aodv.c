@@ -110,8 +110,7 @@ int8_t remove_routing_entry(){
 void print_routing_table(){
   uint8_t i;
   for(i=0 ; i<table_size ; i++){
-    printf("[DEBUG-routing-entry] dest: %d | next_hop: %d | hop_count: %d | dest_seq_num: %d | \
-      neighbor_len: %d | lifespan: %d | ssnr2: %d\r\n", 
+    printf("[DEBUG-routing-entry] dest: %d | next_hop: %d | hop_count: %d | dest_seq_num: %d | neighbor_len: %d | lifespan: %d | ssnr2: %d\r\n", 
       routing_table[i].dest, routing_table[i].next_hop, routing_table[i].hop_count, 
       routing_table[i].dest_seq_num, routing_table[i].neighbor_len, routing_table[i].lifespan,
       routing_table[i].ssnr2);
@@ -324,8 +323,7 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
 void print_rreq_buffer() {
   int i;
   for (i=0; i<rreq_buffer_size; i++) {
-    printf("[DEBUG-rreq-buffer] type: %d | broadcast_id: %d | src: %d | src_seq_num: %d | \
-      dest: %d | dest_seq_num: %d | hop_count: %d\r\n", 
+    printf("[DEBUG-rreq-buffer] type: %d | broadcast_id: %d | src: %d | src_seq_num: %d | dest: %d | dest_seq_num: %d | hop_count: %d\r\n", 
       rreq_buffer[i].type, rreq_buffer[i].broadcast_id, rreq_buffer[i].src, 
       rreq_buffer[i].src_seq_num, rreq_buffer[i].dest, rreq_buffer[i].dest_seq_num,
       rreq_buffer[i].hop_count);
