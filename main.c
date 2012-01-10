@@ -210,6 +210,9 @@ void rx_task ()
           if ((aodvrreq.dest == find_next_hop(aodvrreq.dest)) || aodvrreq.dest == node_addr) {
             printf("[RX-RREQ] this node is either destination or neighbor of the destination.\r\n");
             if ((dest_seq_num < aodvrreq.dest_seq_num) || (aodvrreq.dest_seq_num == 0)) {
+              // update destination sequence number
+              dest_seq_num = aodvrreq.dest_seq_num;
+
               printf("[RX-RREQ] constructing rrep for receieved rreq...\r\n");
               aodvrrep.type = 2;
               aodvrrep.src = aodvrreq.src;
