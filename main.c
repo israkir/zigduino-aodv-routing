@@ -58,18 +58,20 @@ AODV_MSG_INFO* RMSG = NULL;
 uint8_t rf_ok;
 uint8_t broadcast_id = 0;
 
+int light_val;
+
 void init_srand_seed() {
-  int light_val;
   uint8_t val;
   uint8_t buf;
   int8_t fd;
+
   fd = nrk_open(ADC_DEV_MANAGER, READ);
   if (fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open adc driver\r\n"));
   val = nrk_set_status(fd, ADC_CHAN, 0);
   val = nrk_read(fd, &buf, 1);
   light_val = buf;
   nrk_close(fd);
-  srand(light_val);
+  printf("light_val = %d\r\n", light_val);
 }
 
 int main ()
@@ -77,23 +79,15 @@ int main ()
   nrk_setup_ports ();
   nrk_setup_uart (UART_BAUDRATE_115K2);
   
-  // init a unique id for this node
+  // Register the ADC device driver
+  uint8_t val;
+  val = nrk_register_driver( &dev_manager_adc,ADC_DEV_MANAGER);
+  if(val==NRK_ERROR) nrk_kprintf( PSTR("Failed to load my ADC driver\r\n") );
 
-  if (WHOAMI == "source") {
-    node_addr = SRC_ADDR;
-  } else if (WHOAMI == "destination") {
-    node_addr = DEST_ADDR;
-  } else {
-    init_srand_seed();
-    node_addr = (rand() % 1000) + 7;
-    /*node_addr = 111;*/
-  }
-  
   timeout_t.secs = 0;
   timeout_t.nano_secs = 10;
   buffer_semaphore = nrk_sem_create(1,4);
   
-  printf("[DEBUG-main] My addr is: %d\r\n", node_addr);
   
   nrk_init ();
   nrk_time_set (0, 0);
@@ -319,6 +313,20 @@ void tx_task ()
   AODV_RREP_INFO aodvrrep;
   AODV_RREP_INFO aodvrack;
   AODV_RERR_INFO aodvrerr;
+
+  // init a unique id for this node
+  if (WHOAMI == "source") {
+    node_addr = SRC_ADDR;
+  } else if (WHOAMI == "destination") {
+    node_addr = DEST_ADDR;
+  } else {
+    init_srand_seed();
+    srand(light_val);
+    printf("rand() = %d\r\n", rand());
+    node_addr = rand() % 1000 + 7;
+    /*node_addr = 111;*/
+  }
+  printf("[DEBUG-tx_task] My addr is: %d\r\n", node_addr);
 
   uint8_t i;
 

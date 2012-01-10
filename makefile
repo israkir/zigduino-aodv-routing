@@ -26,7 +26,7 @@ SRC = $(TARGET).c
 # For example:
 # SRC += $(ROOT_DIR)/src/net/bmac/$(RADIO)/bmac.c
 SRC += ./aodv.c
-
+SRC += $(ROOT_DIR)/src/drivers/platform/$(PLATFORM_TYPE)/source/adc_driver.c
 SRC += ./my_basic_rf.c
 
 # Add extra includes files. 

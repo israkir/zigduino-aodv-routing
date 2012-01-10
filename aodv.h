@@ -53,7 +53,7 @@ typedef struct{
 } AODV_RERR_INFO;
 
 extern nrk_time_t timeout_t;
-extern uint8_t node_addr;
+extern int node_addr;
 extern uint8_t node_seq_num;
 extern uint8_t dest_seq_num;
 extern uint8_t table_size;

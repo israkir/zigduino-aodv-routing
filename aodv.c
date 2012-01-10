@@ -13,7 +13,7 @@
 #define RREQ_BUFFER_SIZE 2
 
 ROUTING_ENTRY routing_table[MAX_TABLE_SIZE];
-uint8_t node_addr;
+int node_addr;
 uint8_t node_seq_num = 1;
 uint8_t dest_seq_num = 0;
 AODV_RREQ_INFO rreq_buffer[RREQ_BUFFER_SIZE];
