@@ -323,7 +323,7 @@ void tx_task ()
     init_srand_seed();
     srand(light_val);
     printf("rand() = %d\r\n", rand());
-    node_addr = rand() % 1000 + 7;
+    node_addr = rand() % 100 + 7;
     /*node_addr = 111;*/
   }
   printf("[DEBUG-tx_task] My addr is: %d\r\n", node_addr);
