@@ -200,10 +200,11 @@ void rx_task ()
         unpack_aodv_rreq(local_rx_buf, &aodvrreq);
         printf("[RX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
 
-        // DEBUG PURPOSE
-        /*if (strcmp(WHOAMI, "destination") == 0 && rfRxInfo.srcAddr == SRC_ADDR) {*/
-          /*continue;*/
-        /*}*/
+        // DEBUG PURPOSE for 3 nodes, so it will force routing through the
+        // third intermediate node
+        if (strcmp(WHOAMI, "destination") == 0 && rfRxInfo.srcAddr == SRC_ADDR) {
+          continue;
+        }
 
         // valid: this node did not received a RREQ with greater broadcast_id & source addr
         if (check_rreq_is_valid(&aodvrreq) != -1) {
