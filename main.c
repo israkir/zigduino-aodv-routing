@@ -39,8 +39,6 @@ RF_RX_INFO rfRxInfo;
 uint8_t tx_buf[RF_MAX_PAYLOAD_SIZE];
 uint8_t rx_buf[RF_MAX_PAYLOAD_SIZE];
 
-nrk_sig_t signal_send_packet;
-
 //TX Flags
 AODV_RREQ_INFO* RREQ = NULL;
 AODV_RREP_INFO* RACK = NULL;
@@ -185,7 +183,6 @@ void rx_task ()
               aodvrreq.hop_count = 1;
               // set flag for tx_task, so tx_task can broadcast!
               RREQ = &aodvrreq;
-              nrk_event_signal(SIG(signal_send_packet));
             }
             /*
             else {
@@ -218,20 +215,17 @@ void rx_task ()
               aodvrrep.hop_count = 1;
               RREQ = NULL;
               RREP = &aodvrrep;
-              // nrk_event_signal(SIG(signal_send_packet));
             } else {
               // this node is not neighbor to destination, so propagate RREQ!
               RREP = NULL;
               aodvrreq.hop_count += 1;
               RREQ = &aodvrreq;
-              nrk_event_signal(SIG(signal_send_packet));
             }
           } else {
             // this node is not destination, so propagate RREQ!
             RREP = NULL;        
             aodvrreq.hop_count += 1;
             RREQ = &aodvrreq;
-            nrk_event_signal(SIG(signal_send_packet));
           }
         }
     } else if(type == 2) { // RREP
@@ -265,8 +259,6 @@ void rx_task ()
           RREP = &aodvrrep;
         }
         RREQ = NULL;
-        if (RREP || RMSG)
-          nrk_event_signal(SIG(signal_send_packet));
       } else {
         RREQ = NULL;
         RREP = NULL;
@@ -317,9 +309,6 @@ void tx_task ()
   AODV_RREP_INFO aodvrack;
   AODV_RERR_INFO aodvrerr;
 
-  signal_send_packet = nrk_rx_signal_get();
-  nrk_signal_register(signal_send_packet);	
-
   while(!rf_ok){
     nrk_wait_until_next_period();
   }
@@ -328,7 +317,6 @@ void tx_task ()
   while (1) {
 
     nrk_led_set(RFTX_LED);
-    /*nrk_event_wait(SIG(signal_send_packet));*/
     /*printf("in tx_task\r\n");*/
 
     // RACK
@@ -443,7 +431,6 @@ void serial_task()
       aodvmsg.msg_seq_no = msg_seq_no++;
       aodvmsg.msg = msg;
       RMSG = &aodvmsg;
-      nrk_event_signal(SIG(signal_send_packet));
       printf("[DEBUG-serial] ret: %d || char: %c\r\n", ret, c);
     } else {
       printf("[DEBUG-serial] ready to wait...\r\n");
