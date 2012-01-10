@@ -307,7 +307,7 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
   } else {
     int i;
     for (i=0; i<rreq_buffer_size; i++) {
-      if ((rreq_buffer[i].broadcast_id == aodvrreq->broadcast_id) && (rreq_buffer[i].src == aodvrreq->src)) {
+      if ((rreq_buffer[i].broadcast_id > aodvrreq->broadcast_id) && (rreq_buffer[i].src == aodvrreq->src)) {
         return -1;
       } else {
         return 0;

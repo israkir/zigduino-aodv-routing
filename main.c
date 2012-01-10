@@ -55,8 +55,7 @@ void init_srand_seed() {
   uint8_t buf;
   int8_t fd;
   fd = nrk_open(ADC_DEV_MANAGER, READ);
-  if (fd==NRK_ERROR) 
-    nrk_kprintf(PSTR("Failed to open adc driver\r\n"));
+  if (fd==NRK_ERROR) nrk_kprintf(PSTR("Failed to open adc driver\r\n"));
   val = nrk_set_status(fd, ADC_CHAN, 0);
   val = nrk_read(fd, &buf, 1);
   light_val = buf;
@@ -197,12 +196,12 @@ void rx_task ()
         // if received rreq is valid, then process it!
         // valid: this node did not received a RREQ with the same broadcast_id & source addr
         if (check_rreq_is_valid(&aodvrreq) != -1) {
+          add_rreq_to_buffer(&aodvrreq);
+          print_rreq_buffer();
           printf("[RX-RREQ] check is valid - adding the request to routing entry\r\n");
           // create inverse routing entry
           add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi); 
           print_routing_table();
-          add_rreq_to_buffer(&aodvrreq);
-          print_rreq_buffer();
           // this node neighbor of destination, so RREP!
           if ((aodvrreq.dest == find_next_hop(aodvrreq.dest)) || aodvrreq.dest == node_addr) {
             printf("[RX-RREQ] this node is either destination or neighbor of the destination.\r\n");
@@ -309,32 +308,13 @@ void tx_task ()
   AODV_RREP_INFO aodvrack;
   AODV_RERR_INFO aodvrerr;
 
-  while(!rf_ok){
+  while(!rf_ok) {
     nrk_wait_until_next_period();
   }
   printf ("[DEBUG-TX]: tx_task PID=%d\r\n", nrk_get_pid ());
 
   while (1) {
-
     nrk_led_set(RFTX_LED);
-    /*printf("in tx_task\r\n");*/
-
-    // RACK
-    /*
-    if () {
-      aodvrreq.type = 4;
-      aodvrreq.broadcast_id = 0;
-      aodvrreq.dest = node_addr;
-      aodvrreq.lifespan = 1;
-      aodvrreq.hop_count = 1;
-
-      pack_aodv_rreq(tx_buf, aodvrreq);
-      printf("txpacket type = %d, broadcast_id = %d, dest = %d, lifespan = %d, hop_count = %d\r\n", 
-        tx_buf[0], tx_buf[1], tx_buf[3], tx_buf[4], tx_buf[5]);
-
-      send_packet(tx_buf);
-    }
-    */
 
     if (RREP) {
       printf("[TX-RREP] inside the condition.\r\n");
@@ -407,14 +387,14 @@ void serial_task()
 {
   nrk_sig_t uart_rx_signal;
   nrk_sig_mask_t sm;
-  char c;
   
   AODV_MSG_INFO aodvmsg;
+  char c;
 
   // Get the signal for UART RX
-    uart_rx_signal=nrk_uart_rx_signal_get();
-     // Register task to wait on signal
-    nrk_signal_register(uart_rx_signal);
+  uart_rx_signal=nrk_uart_rx_signal_get();
+  // Register task to wait on signal
+  nrk_signal_register(uart_rx_signal);
     
   int ret = -3;
   int msg_seq_no = 0;
@@ -488,5 +468,5 @@ void nrk_create_taskset ()
   SERIAL_TASK.offset.nano_secs = 0;
   nrk_activate_task (&SERIAL_TASK);
   
-  printf ("Create done\r\n");
+  printf ("[DEBUG] Tasks creations are done.\r\n");
 }
