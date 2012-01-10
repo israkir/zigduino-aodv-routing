@@ -109,7 +109,6 @@ int8_t remove_routing_entry(){
 
 void print_routing_table(){
   uint8_t i;
-  nrk_kprintf(PSTR("d,n,s,h\r\n"));
   for(i=0 ; i<table_size ; i++){
     printf("[DEBUG-routing-entry] dest: %d | next_hop: %d | hop_count: %d | dest_seq_num: %d | \
       neighbor_len: %d | lifespan: %d | ssnr2: %d\r\n", 
