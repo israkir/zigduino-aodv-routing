@@ -319,6 +319,7 @@ void tx_task ()
       // critical section start
       nrk_sem_pend(buffer_semaphore);
       printf("[TX] new_msg_len = %d\r\n", new_msg_len);
+      aodvmsg.msg_len = new_msg_len;
       memcpy(msg, new_msg, new_msg_len);
       memset(new_msg, 0, new_msg_len);
       new_msg_len = 0;
@@ -328,7 +329,6 @@ void tx_task ()
       aodvmsg.src = SRC_ADDR;
       aodvmsg.dest = DEST_ADDR;
       aodvmsg.msg_seq_no = msg_seq_no++;
-      aodvmsg.msg_len = 1;
       aodvmsg.msg = msg;
       RMSG = &aodvmsg;
       printf("[TX] msg = %s.\r\n", msg);
