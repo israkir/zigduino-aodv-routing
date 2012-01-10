@@ -40,7 +40,7 @@ uint8_t new_msg[MAX_NEW_MSG_LEN];
 
 uint8_t new_msg_len = 0;
 uint8_t msg_seq_no = 0;
-uint8_t is_broadcasting = 0;
+uint8_t source_broadcasting = 0;
 
 RF_TX_INFO rfTxInfo;
 RF_RX_INFO rfRxInfo;
@@ -258,7 +258,7 @@ void rx_task ()
           RREQ = NULL;
           RREP = &aodvrrep;
           if (node_addr == aodvrrep.src) {
-            is_broadcasting = 0;
+            source_broadcasting = 0;
             RREP = NULL;
           }
         } else {
@@ -338,7 +338,7 @@ void tx_task ()
     if (RMSG) {
       printf("[TX-RMSG] inside the condition.\r\n");
       aodvmsg = *RMSG;  
-      if (!is_broadcasting) {
+      if (!source_broadcasting || WHOAMI != "source") {
         if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
           pack_aodv_msg(tx_buf, aodvmsg);
           printf("[TX-RMSG] txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
@@ -373,7 +373,7 @@ void tx_task ()
         aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
       pack_aodv_rreq(tx_buf, aodvrreq);
       broadcast_rreq(tx_buf);
-      is_broadcasting = 1;
+      source_broadcasting = 1;
       RREQ = NULL;
     }
 
