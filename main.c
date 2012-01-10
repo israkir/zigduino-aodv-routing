@@ -88,6 +88,20 @@ int main ()
   timeout_t.nano_secs = 10;
   buffer_semaphore = nrk_sem_create(1,4);
   
+  // init a unique id for this node
+  if (WHOAMI == "source") {
+    node_addr = SRC_ADDR;
+  } else if (WHOAMI == "destination") {
+    node_addr = DEST_ADDR;
+  } else {
+    init_srand_seed();
+    srand(light_val);
+    printf("rand() = %d\r\n", rand());
+    node_addr = rand() % 100 + 7;
+    /*node_addr = 111;*/
+  }
+  printf("[DEBUG-tx_task] My addr is: %d\r\n", node_addr);
+
   
   nrk_init ();
   nrk_time_set (0, 0);
@@ -113,6 +127,7 @@ void rx_task ()
   AODV_RERR_INFO aodvrerr;
 
   printf ("[DEBUG-RX] rx_task PID=%d\r\n", nrk_get_pid ());
+
 
 
   // set_routing_table();
@@ -313,20 +328,6 @@ void tx_task ()
   AODV_RREP_INFO aodvrrep;
   AODV_RREP_INFO aodvrack;
   AODV_RERR_INFO aodvrerr;
-
-  // init a unique id for this node
-  if (WHOAMI == "source") {
-    node_addr = SRC_ADDR;
-  } else if (WHOAMI == "destination") {
-    node_addr = DEST_ADDR;
-  } else {
-    init_srand_seed();
-    srand(light_val);
-    printf("rand() = %d\r\n", rand());
-    node_addr = rand() % 100 + 7;
-    /*node_addr = 111;*/
-  }
-  printf("[DEBUG-tx_task] My addr is: %d\r\n", node_addr);
 
   uint8_t i;
 
