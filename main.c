@@ -291,7 +291,10 @@ void rx_task ()
           add_routing_entry(aodvrreq.dest, aodvrreq.dest, aodvrreq.broadcast_id, aodvrreq.hop_count, rfRxInfo.rssi);
         } */
       } else nrk_kprintf( PSTR("[DEBUG] unknown type\r\n"));
-    } else if(n == NRK_ERROR) printf( "[DEBUG-RX] CRC failed!\r\n" );
+    } else if(n == NRK_ERROR) {
+      printf( "[DEBUG-RX] CRC failure!\r\n" );
+      nrk_wait(timeout_t);
+    }
   }
 }
 
