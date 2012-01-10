@@ -192,7 +192,7 @@ void rx_task ()
         }
       } else if(type == 1) { // RREQ
         unpack_aodv_rreq(local_rx_buf, &aodvrreq);
-        printf("[RX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
+        printf("[RX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d, srcAddr = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count, rfRxInfo.srcAddr);
 
         // DEBUG PURPOSE for 3 nodes, so it will force routing through the
         // third intermediate node
