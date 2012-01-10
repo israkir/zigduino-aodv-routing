@@ -297,7 +297,15 @@ void rx_task ()
       } else nrk_kprintf( PSTR("[DEBUG] unknown type\r\n"));
     } else if(n == NRK_ERROR) {
       printf( "[DEBUG-RX] CRC failure!\r\n" );
-      nrk_wait(timeout_t);
+      // TODO: restart rx as it might be hardward failure
+      // PLAN A
+      rf_power_down();
+      rf_power_up();
+
+      // PLAN B
+      /*rf_rx_off();*/
+      /*rf_rx_on();*/
+      /*rf_polling_rx_on();*/
     }
   }
 }
