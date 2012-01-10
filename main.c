@@ -163,6 +163,7 @@ void rx_task ()
           if(aodvmsg.dest == node_addr){
             // this node is destination, so print received packet
             printf("[RX-DATA] %s\r\n", aodvmsg.msg);
+            memset(rxmsg, 0, aodvmsg.msg_len);
           } else {
             // this node is not destination, so send it to neighbor
             if((next_hop = find_next_hop(aodvmsg.dest)) != 0){
@@ -351,6 +352,7 @@ void tx_task ()
           printf("[TX-RMSG] txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
           send_packet(tx_buf);
+          memset(RMSG->msg, 0, RMSG->msg_len);
           RMSG = NULL;
         } else {
           printf("[TX-RMSG] broadcasting rreq...\r\n");
