@@ -140,7 +140,7 @@ uint8_t pack_aodv_rrep(uint8_t* tx_buf, AODV_RREP_INFO aodvrrep){
   tx_buf[3] = aodvrrep.dest_seq_num;
   tx_buf[4] = aodvrrep.hop_count;
   tx_buf[5] = aodvrrep.lifespan;
-  return 6;
+  return 7;
 }
 
 void unpack_aodv_rreq(uint8_t* rx_buf, AODV_RREQ_INFO* aodvrreq){
@@ -161,7 +161,7 @@ uint8_t pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq){
   tx_buf[4] = aodvrreq.dest;
   tx_buf[5] = aodvrreq.dest_seq_num;
   tx_buf[6] = aodvrreq.hop_count;
-  return 7;
+  return 8;
 }
 
 void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg){
@@ -183,7 +183,7 @@ uint8_t pack_aodv_msg(uint8_t* tx_buf, AODV_MSG_INFO aodvmsg){
   tx_buf[4] = aodvmsg.msg_seq_no;
   tx_buf[5] = aodvmsg.msg_len;
   memcpy(tx_buf+6, aodvmsg.msg, aodvmsg.msg_len);
-  return 6+aodvmsg.msg_len;
+  return 7+aodvmsg.msg_len;
 }
 
 void unpack_aodv_rerr(uint8_t* rx_buf, AODV_RERR_INFO* aodvrerr){
@@ -198,7 +198,7 @@ uint8_t pack_aodv_rerr(uint8_t* tx_buf, AODV_RERR_INFO aodvrerr){
   tx_buf[1] = aodvrerr.dest;
   tx_buf[2] = aodvrerr.dest_seq;
   tx_buf[3] = aodvrerr.src;
-  return 4;
+  return 5;
 }
 
 void repack_forward_msg(uint8_t* buf, AODV_MSG_INFO aodvmsg, uint8_t next_hop){
