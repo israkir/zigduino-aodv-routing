@@ -134,7 +134,7 @@ void rx_task ()
 
     if(n == NRK_OK) {
       printf("[DEBUG-DATA] ");
-      for(i=0; i<rfRxInfo.length; i++ ) printf("%c", rfRxInfo.pPayload[i]);
+      for(i=0; i<rfRxInfo.length; i++ ) printf("[%d]", rfRxInfo.pPayload[i]);
       printf("\r\n");
 
       local_rx_buf = rfRxInfo.pPayload;
@@ -294,7 +294,7 @@ void tx_task ()
   while(!rf_ok) {
     nrk_wait_until_next_period();
   }
-  printf ("[DEBUG-TX]: tx_task PID=%d\r\n", nrk_get_pid ());
+  printf ("[DEBUG-TX] tx_task PID=%d\r\n", nrk_get_pid ());
 
   while (1) {
 
