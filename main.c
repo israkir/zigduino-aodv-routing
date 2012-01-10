@@ -227,6 +227,14 @@ void rx_task ()
               RREQ = NULL;
             }
           }
+          else {
+            printf("[RX-RREQ] increase hop count\r\n");
+            aodvrreq.hop_count++;
+
+            printf("[RX-RREQ] broadcast rreq message\r\n");
+            RREQ = &aodvrreq;
+            RREP = NULL;
+          }
         }
       } else if(type == 2) { // RREP
         unpack_aodv_rrep (local_rx_buf, &aodvrrep);
