@@ -323,6 +323,9 @@ void tx_task ()
       printf("[TX] new_msg_len = %d\r\n", new_msg_len);
       aodvmsg.msg_len = new_msg_len;
       memcpy(msg, new_msg, new_msg_len);
+      printf("[TX] msg = ");
+      for(i=0; i<new_msg_len;i++) printf("%d", msg[i]);
+      printf("\r\n");
       memset(new_msg, 0, new_msg_len);
       new_msg_len = 0;
       nrk_sem_post(buffer_semaphore);
@@ -333,7 +336,6 @@ void tx_task ()
       aodvmsg.msg_seq_no = msg_seq_no++;
       aodvmsg.msg = msg;
       RMSG = &aodvmsg;
-      printf("[TX] msg = %s.\r\n", msg);
     }
     
     if (RREP) {
@@ -356,7 +358,6 @@ void tx_task ()
           printf("[TX-RMSG] txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
           send_packet(tx_buf);
-          memset(RMSG->msg, 0, RMSG->msg_len);
           RMSG = NULL;
         } else {
           printf("[TX-RMSG] broadcasting rreq...\r\n");
