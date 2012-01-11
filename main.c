@@ -482,7 +482,7 @@ void tx_task ()
           printf("rebroadcasting...");
         }
       }
-      else if {
+      else {
         if (broadcast_rreq(tx_buf, len) != -1) {
           nrk_wait(timeout_t);
           printf("rebroadcasting...");
