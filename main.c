@@ -373,7 +373,11 @@ void tx_task ()
       }
       aodvrrep = *RREP;
       uint8_t len = pack_aodv_rrep(tx_buf, aodvrrep);
-      send_rrep(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrrep.src), len);
+      // Keep sending until ACK received
+      while (send_rrep(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrrep.src), len) != 1) {
+        nrk_wait(timeout_t);
+      }
+      
       RREP = NULL;
     }
 
@@ -385,7 +389,11 @@ void tx_task ()
           uint8_t len = pack_aodv_msg(tx_buf, aodvmsg);
           printf("[TX-RMSG] txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
-          send_packet(tx_buf, len);
+          
+          // Keep sending until ACK received
+          while (send_packet(tx_buf, len) != 1) {
+            nrk_wait(timeout_t);
+          }
           RMSG = NULL;
         } else {
           printf("[TX-RMSG] broadcasting rreq...\r\n");
@@ -412,7 +420,10 @@ void tx_task ()
       aodvrreq = *RREQ;
       printf("[TX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
       uint8_t len = pack_aodv_rreq(tx_buf, aodvrreq);
-      broadcast_rreq(tx_buf, len);
+      // Keep sending until ACK received
+      while (broadcast_rreq(tx_buf, len) != 1) {
+        nrk_wait(timeout_t);
+      }
       source_broadcasting = 1;
       RREQ = NULL;
     }
@@ -421,7 +432,10 @@ void tx_task ()
       printf("[TX-RERR] inside the condition.\r\n");
       aodvrerr = *RERR;
       uint8_t len = pack_aodv_rerr(tx_buf, aodvrerr);
-      send_rerr(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrerr.src), len);
+      // Keep sending until ACK received
+      while (send_rerr(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrerr.src), len) != 1) {
+        nrk_wait(timeout_t);
+      }
       RERR = NULL;
     }
 

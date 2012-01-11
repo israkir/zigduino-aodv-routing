@@ -274,7 +274,7 @@ uint8_t find_next_hop_by_ssnr2_and_hop_count(uint8_t dest) {
     return routing_table[entry].next_hop; // 0 => did not find in routing table
 }
 
-void broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
+uint8_t broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = length+5;
   rfTxInfo.destAddr = 0xffff; // broadcast by default
@@ -282,57 +282,72 @@ void broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
   rfTxInfo.ackRequest = 1;
 
   // printf( "Sending\r\n" );
+  return rf_tx_packet(&rfTxInfo);
+
+  /*
   if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
     nrk_wait(timeout_t);
   }
   else
     nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
+    */
 }
 
-void send_packet(uint8_t *tx_buf, uint8_t length){
+uint8_t send_packet(uint8_t *tx_buf, uint8_t length){
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = length+5;
   rfTxInfo.destAddr = tx_buf[2]; // next_hop
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
+  return rf_tx_packet(&rfTxInfo);
+  /*
   if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
     nrk_wait(timeout_t);
   }
   else
     nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
+    */
 }
 
-void send_rrep(uint8_t *tx_buf, uint8_t next_hop, uint8_t length){
+uint8_t send_rrep(uint8_t *tx_buf, uint8_t next_hop, uint8_t length){
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = length+5;
   rfTxInfo.destAddr = next_hop;
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
+  return rf_tx_packet(&rfTxInfo);
+
+  /*
   if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
     nrk_wait(timeout_t);
   }
   else
     nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
+    */
 }
 
-void send_rerr(uint8_t *tx_buf, uint8_t next_hop, uint8_t length){
+uint8_t send_rerr(uint8_t *tx_buf, uint8_t next_hop, uint8_t length){
   rfTxInfo.pPayload = tx_buf;
   rfTxInfo.length = length+5;
   rfTxInfo.destAddr = next_hop;
   rfTxInfo.cca = 0;
   rfTxInfo.ackRequest = 1;
 
+  return rf_tx_packet(&rfTxInfo);
+
+  /*
   if(rf_tx_packet(&rfTxInfo) != 1){
     nrk_kprintf (PSTR ("@@@ RF_TX ERROR @@@\r\n"));
     nrk_wait(timeout_t);
   }
   else
     nrk_kprintf (PSTR ("=== Tx task sent data! ===\r\n"));
+    */
 }
 
 

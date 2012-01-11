@@ -85,10 +85,10 @@ uint8_t find_next_hop(uint8_t dest);
 uint8_t find_next_hop_by_ssnr2(uint8_t dest);
 uint8_t find_next_hop_by_ssnr2_and_hop_count(uint8_t dest);
 
-void send_packet(uint8_t *tx_buf, uint8_t length);
-void send_rrep(uint8_t *tx_buf, uint8_t next_hop, uint8_t length);
-void broadcast_rreq(uint8_t *tx_buf, uint8_t length);
-void send_rerr(uint8_t *tx_buf, uint8_t next_hop, uint8_t length);
+uint8_t send_packet(uint8_t *tx_buf, uint8_t length);
+uint8_t send_rrep(uint8_t *tx_buf, uint8_t next_hop, uint8_t length);
+uint8_t broadcast_rreq(uint8_t *tx_buf, uint8_t length);
+uint8_t send_rerr(uint8_t *tx_buf, uint8_t next_hop, uint8_t length);
 uint8_t getuint_8();
 void renew_routing_entry(uint8_t dest, uint8_t dest_seq_num);
 
