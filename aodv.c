@@ -340,22 +340,27 @@ int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
 int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
   // check node received a RREQ with the same broadcast_id & source addr
   // if it did, return -1 (drop the rreq packet); return 0, otherwise.
-  if (node_addr == aodvrreq->src) 
+  if (node_addr == aodvrreq->src) {
+    printf("rejecting in first cond...\r\n");
     return -1;
+  }   
   
   if (rreq_buffer_size == 0) {
     // buffer it, if it is a valid rreq.
     add_rreq_to_buffer(aodvrreq);
+    printf("first return 0\r\n");
     return 0;
   } else {
     int i;
     for (i=0; i<rreq_buffer_size; i++) {
       if (rreq_buffer[i].src == aodvrreq->src) {
         if (rreq_buffer[i].broadcast_id >= aodvrreq->broadcast_id) {
+          printf("rejecting in second cond...\r\n");
           return -1; // reject
         } else {
           // buffer it, if it is a valid rreq.
           add_rreq_to_buffer(aodvrreq);
+          printf("second return 0\r\n");
           return 0;
         }
       } 
@@ -364,6 +369,7 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
     // completely new rreq
     // buffer it, if it is a valid rreq.
     add_rreq_to_buffer(aodvrreq);
+    printf("third return 0\r\n");
     return 0;
   }
 }
