@@ -212,6 +212,7 @@ void rx_task ()
         // valid: this node did not received a RREQ with greater broadcast_id & source addr
         if (check_rreq_is_valid(&aodvrreq) != -1) {
           printf("[RX-RREQ] check is valid - adding the request to routing entry\r\n");
+          print_rreq_buffer();
           // create inverse routing entry
           add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi); 
           print_routing_table();
