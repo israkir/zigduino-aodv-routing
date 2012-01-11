@@ -24,6 +24,7 @@
 
 #define MAX_NEW_MSG_LEN 128
 #define MAX_MSG_LEN 128
+#define MAX_RETRY 10
 
 nrk_task_type RX_TASK;
 NRK_STK rx_task_stack[NRK_APP_STACKSIZE];
@@ -48,6 +49,7 @@ uint8_t new_msg[MAX_NEW_MSG_LEN];
 uint8_t new_msg_len = 0;
 uint8_t msg_seq_no = 0;
 uint8_t source_broadcasting = 0;
+uint8_t retry = 0;
 
 RF_TX_INFO rfTxInfo;
 RF_RX_INFO rfRxInfo;
@@ -365,6 +367,17 @@ void tx_task ()
       aodvmsg.msg = msg;
       RMSG = &aodvmsg;
     }
+
+    if (RERR) {
+      printf("[TX-RERR] inside the condition.\r\n");
+      aodvrerr = *RERR;
+      uint8_t len = pack_aodv_rerr(tx_buf, aodvrerr);
+      // Keep sending until ACK received
+      while (send_rerr(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrerr.src), len) != 1) {
+        nrk_wait(timeout_t);
+      }
+      RERR = NULL;
+    }
     
     if (RREP) {
       printf("[TX-RREP] inside the condition.\r\n");
@@ -374,8 +387,19 @@ void tx_task ()
       aodvrrep = *RREP;
       uint8_t len = pack_aodv_rrep(tx_buf, aodvrrep);
       // Keep sending until ACK received
-      while (send_rrep(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrrep.src), len) != 1) {
+      while (send_rrep(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrrep.src), len) != 1 && retry < MAX_RETRY) {
         nrk_wait(timeout_t);
+        retry++;
+      }
+      if (retry == MAX_RETRY) {
+        retry = 0;
+        aodvrerr.type = 4;
+        aodvrerr.dest = aodvrrep.dest;
+        aodvrerr.dest_seq = aodvrrep.dest_seq_num;
+        aodvrerr.src = aodvrrep.src;
+        RERR = &aodvrerr;
+      }
+      else {
       }
       
       RREP = NULL;
@@ -391,9 +415,37 @@ void tx_task ()
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
           
           // Keep sending until ACK received
-          while (send_packet(tx_buf, len) != 1) {
+          while (send_packet(tx_buf, len) != 1 && retry < MAX_RETRY) {
             nrk_wait(timeout_t);
+            retry++;
           }
+          if (retry == MAX_RETRY) {
+            retry = 0;
+            if (WHOAMI == "intermediate") {
+              aodvrerr.type = 4;
+              aodvrerr.dest = aodvrrep.dest;
+              aodvrerr.dest_seq = aodvrrep.dest_seq_num;
+              aodvrerr.src = aodvrrep.src;
+              RERR = &aodvrerr;
+            }
+            else if (WHOAMI == "source") {
+              printf("[TX-RMSG] broadcasting rreq...\r\n");
+              broadcast_id++;
+              // construct RREQ message
+              aodvrreq.type = 1;
+              aodvrreq.broadcast_id = broadcast_id;
+              aodvrreq.src = aodvmsg.src;
+              aodvrreq.src_seq_num = 1; 
+              aodvrreq.dest = aodvmsg.dest;
+              aodvrreq.dest_seq_num = dest_seq_num;
+              aodvrreq.hop_count = 1;
+              // set flag for tx_task, so tx_task can broadcast!
+              RREQ = &aodvrreq;
+            }
+          }
+          else {
+          }
+
           RMSG = NULL;
         } else {
           printf("[TX-RMSG] broadcasting rreq...\r\n");
@@ -426,17 +478,6 @@ void tx_task ()
       }
       source_broadcasting = 1;
       RREQ = NULL;
-    }
-
-    if (RERR) {
-      printf("[TX-RERR] inside the condition.\r\n");
-      aodvrerr = *RERR;
-      uint8_t len = pack_aodv_rerr(tx_buf, aodvrerr);
-      // Keep sending until ACK received
-      while (send_rerr(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrerr.src), len) != 1) {
-        nrk_wait(timeout_t);
-      }
-      RERR = NULL;
     }
 
     nrk_wait_until_next_period();
