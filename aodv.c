@@ -340,14 +340,21 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
   } else {
     int i;
     for (i=0; i<rreq_buffer_size; i++) {
-      if ((rreq_buffer[i].broadcast_id >= aodvrreq->broadcast_id) && (rreq_buffer[i].src == aodvrreq->src)) {
-        return -1;
-      } else {
-        // buffer it, if it is a valid rreq.
-        add_rreq_to_buffer(&aodvrreq);
-        return 0;
-      }
+      if (rreq_buffer[i].src == aodvrreq->src) {
+        if (rreq_buffer[i].broadcast_id >= aodvrreq->broadcast_id) {
+          return -1; // reject
+        } else {
+          // buffer it, if it is a valid rreq.
+          add_rreq_to_buffer(&aodvrreq);
+          return 0;
+        }
+      } 
     }
+
+    // completely new rreq
+    // buffer it, if it is a valid rreq.
+    add_rreq_to_buffer(&aodvrreq);
+    return 0;
   }
 }
 
