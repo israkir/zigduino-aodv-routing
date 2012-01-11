@@ -198,8 +198,8 @@ uint8_t pack_aodv_rerr(uint8_t* tx_buf, AODV_RERR_INFO aodvrerr){
   return 4;
 }
 
-void repack_forward_msg(uint8_t* buf, AODV_MSG_INFO aodvmsg, uint8_t next_hop){
-  buf[2] = next_hop;
+void repack_forward_msg(AODV_MSG_INFO* aodvmsg, uint8_t next_hop){
+  aodvmsg->next_hop = next_hop;
 }
 
 uint8_t find_index(uint8_t dest, uint8_t dest_seq_num){

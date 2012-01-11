@@ -168,6 +168,7 @@ void rx_task ()
       type = get_msg_type(local_rx_buf);
 
       if (type == 0) { //normal msg
+        memset(rxmsg, 0, MAX_MSG_LEN);
         unpack_aodv_msg (local_rx_buf, &aodvmsg, rxmsg);
         printf("[RX-RMSG] type = %d, src = %d, nexthop = %d, dest = %d, msg_len = %d, msg = %s\r\n", aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.msg_len, aodvmsg.msg);
 
@@ -183,7 +184,7 @@ void rx_task ()
             // this node is not destination, so send it to neighbor
             if((next_hop = find_next_hop_by_ssnr2_and_hop_count(aodvmsg.dest)) != 0){
               printf("[RX-DATA] sendmsg to %d\r\n", next_hop);
-              repack_forward_msg(local_rx_buf, aodvmsg, next_hop);
+              repack_forward_msg(&aodvmsg, next_hop);
               RMSG = &aodvmsg;
               /*send_packet(local_rx_buf);*/
             } else {
