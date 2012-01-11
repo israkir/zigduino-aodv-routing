@@ -53,7 +53,7 @@ int8_t add_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, u
   if(table_size < MAX_TABLE_SIZE){
     int i;
     for (i=0; i<table_size; i++) { 
-      if (routing_table[i].dest == dest) {
+      if (routing_table[i].dest == dest && routing_table[i].next_hop == next_hop) {
         if (routing_table[i].dest_seq_num < dest_seq_num) {
           routing_table[i].dest = dest;
           routing_table[i].next_hop = next_hop;

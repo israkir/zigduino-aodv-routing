@@ -217,26 +217,32 @@ void rx_task ()
           add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi); 
           print_routing_table();
 
-          // this node neighbor of destination, so RREP!
-          if ((aodvrreq.dest == find_next_hop_by_ssnr2_and_hop_count(aodvrreq.dest)) || aodvrreq.dest == node_addr) {
+          // this node is the destination, so RREP!
+          if (/*(aodvrreq.dest == find_next_hop_by_ssnr2_and_hop_count(aodvrreq.dest)) || */aodvrreq.dest == node_addr) {
             printf("[RX-RREQ] this node is either destination or neighbor of the destination.\r\n");
+
             if ((dest_seq_num < aodvrreq.dest_seq_num) || (aodvrreq.dest_seq_num == 0)) {
               // update destination sequence number
               dest_seq_num = aodvrreq.dest_seq_num;
+            }
 
-              printf("[RX-RREQ] constructing rrep for receieved rreq...\r\n");
-              aodvrrep.type = 2;
-              aodvrrep.src = aodvrreq.src;
-              aodvrrep.dest = aodvrreq.dest;
-              aodvrrep.dest_seq_num = ++dest_seq_num;
-              aodvrrep.hop_count = 1;
-              RREQ = NULL;
-              RREP = &aodvrrep;
+            printf("[RX-RREQ] constructing rrep for receieved rreq...\r\n");
+            aodvrrep.type = 2;
+            aodvrrep.src = aodvrreq.src;
+            aodvrrep.dest = aodvrreq.dest;
+            aodvrrep.dest_seq_num = ++dest_seq_num;
+            aodvrrep.hop_count = 1;
+            aodvrrep.ssnr2 = 0;
+            RREQ = NULL;
+            RREP = &aodvrrep;
+
+            /*
             } else {
               printf("[RX-RREQ] invalid rreq...\r\n");
               RREP = NULL;
               RREQ = NULL;
             }
+            */
           }
           else {
             printf("[RX-RREQ] increase hop count\r\n");
@@ -255,28 +261,34 @@ void rx_task ()
           printf("[RX-RREP] check is valid - updating destination sequence number\r\n");
           // update the destination sequence number
           dest_seq_num = aodvrrep.dest_seq_num;
+        }
 
-          // Creating a new or replace existing routing entry from the rrep message
-          printf("[RX-RREP] adding routing table entry\r\n");
-          add_routing_entry(aodvrrep.dest, rfRxInfo.srcAddr, aodvrrep.dest_seq_num, aodvrrep.hop_count, rfRxInfo.rssi); 
-          print_routing_table();
+        aodvrrep.ssnr2 = 0.5 * (aodvrrep.ssnr2 + rfRxInfo.rssi);
 
-          // TODO: this is for timeout of the reverse route entries
-          // renew routing table entries to source and destination
-          // renew_routing_entry(aodvrrep.src);
-          // renew_routing_entry(aodvrrep.dest);
-          
-          RREQ = NULL;
-          RREP = &aodvrrep;
-          if (node_addr == aodvrrep.src) {
-            source_broadcasting = 0;
-            RREP = NULL;
-          }
+        // Creating a new or replace existing routing entry from the rrep message
+        printf("[RX-RREP] adding routing table entry\r\n");
+        add_routing_entry(aodvrrep.dest, rfRxInfo.srcAddr, aodvrrep.dest_seq_num, aodvrrep.hop_count, aodvrrep.ssnr2); 
+        print_routing_table();
+
+        // TODO: this is for timeout of the reverse route entries
+        // renew routing table entries to source and destination
+        // renew_routing_entry(aodvrrep.src);
+        // renew_routing_entry(aodvrrep.dest);
+        
+
+        RREQ = NULL;
+        RREP = &aodvrrep;
+        if (node_addr == aodvrrep.src) {
+          source_broadcasting = 0;
+          RREP = NULL;
+        }
+        /*
         } else {
           printf("[RX-RREP] invalid/outdated rrep message\r\n");
           RREQ = NULL;
           RREP = NULL;
         }
+        */
       } else if(type == 3) { // RERR
         unpack_aodv_rerr (local_rx_buf, &aodvrerr);
         printf("[RX-RERR] type = %d, srcAddr = %d\r\n", aodvrerr.type, rfRxInfo.srcAddr);
@@ -446,9 +458,10 @@ void tx_task ()
             }
           }
           else {
+            // Sent successfully before MAX_RETRY
+            RMSG = NULL;
           }
 
-          RMSG = NULL;
         } else {
           printf("[TX-RMSG] broadcasting rreq...\r\n");
           broadcast_id++;

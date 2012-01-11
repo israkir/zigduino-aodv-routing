@@ -43,6 +43,7 @@ typedef struct{
   uint8_t dest_seq_num;
   uint8_t hop_count;
   uint8_t lifespan;
+  uint8_t ssnr2;
 } AODV_RREP_INFO;
 
 typedef struct{
