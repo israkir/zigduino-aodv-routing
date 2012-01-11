@@ -1,4 +1,4 @@
-// TODO: intermediate node buffering
+// TODO: intermediate node data buffering
 // TODO: snr based routing table update
 // TODO: error handling for RX/TX ERROR and CRC Failure
 
