@@ -345,7 +345,7 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
   
   if (rreq_buffer_size == 0) {
     // buffer it, if it is a valid rreq.
-    add_rreq_to_buffer(&aodvrreq);
+    add_rreq_to_buffer(aodvrreq);
     return 0;
   } else {
     int i;
@@ -355,7 +355,7 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
           return -1; // reject
         } else {
           // buffer it, if it is a valid rreq.
-          add_rreq_to_buffer(&aodvrreq);
+          add_rreq_to_buffer(aodvrreq);
           return 0;
         }
       } 
@@ -363,7 +363,7 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
 
     // completely new rreq
     // buffer it, if it is a valid rreq.
-    add_rreq_to_buffer(&aodvrreq);
+    add_rreq_to_buffer(aodvrreq);
     return 0;
   }
 }
