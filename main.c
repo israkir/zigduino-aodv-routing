@@ -406,9 +406,7 @@ void tx_task ()
         node_seq_num++;
       }
       aodvrreq = *RREQ;
-      printf("[TX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, src_seq_num = %d, \
-        dest = %d, dest_seq_num = %d, hop_count = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, 
-        aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
+      printf("[TX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
       uint8_t len = pack_aodv_rreq(tx_buf, aodvrreq);
       broadcast_rreq(tx_buf, len);
       source_broadcasting = 1;
