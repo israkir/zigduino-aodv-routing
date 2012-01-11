@@ -378,6 +378,7 @@ void tx_task ()
       // Keep sending until ACK received
       while (send_rerr(tx_buf, find_next_hop_by_ssnr2_and_hop_count(SRC_ADDR), len) != 1) {
         nrk_wait(timeout_t);
+        printf("sending rerr...");
       }
       RERR = NULL;
     }
@@ -392,6 +393,7 @@ void tx_task ()
       // Keep sending until ACK received
       while (send_rrep(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrrep.src), len) != 1 && retry < MAX_RETRY) {
         nrk_wait(timeout_t);
+        printf("sending rrep...");
         retry++;
       }
       if (retry == MAX_RETRY) {
@@ -417,6 +419,7 @@ void tx_task ()
           // Keep sending until ACK received
           while (send_packet(tx_buf, len) != 1 && retry < MAX_RETRY) {
             nrk_wait(timeout_t);
+            printf("sending message...");
             retry++;
           }
           if (retry == MAX_RETRY) {
@@ -472,6 +475,7 @@ void tx_task ()
       // Keep sending until ACK received
       while (broadcast_rreq(tx_buf, len) != 1) {
         nrk_wait(timeout_t);
+        printf("broadcasting...");
       }
       source_broadcasting = 1;
       RREQ = NULL;
