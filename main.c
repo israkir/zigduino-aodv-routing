@@ -295,7 +295,7 @@ void rx_task ()
         printf("[RX-RERR] type = %d, dest = %d, srcAddr = %d\r\n", aodvmsg.type, aodvmsg.dest, rfRxInfo.srcAddr);
         
         // delete route that contains broken link from the routing table
-        remove_routing_entry(); //Remove function not finished yet
+        // remove_routing_entry(); //Remove function not finished yet
       
       } else if(type == 4) { // RACK (special RREP)
         /*

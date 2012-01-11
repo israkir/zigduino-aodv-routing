@@ -13,10 +13,11 @@
 #define RREQ_BUFFER_SIZE 32
 
 ROUTING_ENTRY routing_table[MAX_TABLE_SIZE];
+AODV_RREQ_INFO rreq_buffer[RREQ_BUFFER_SIZE];
+
 uint8_t node_addr;
 uint8_t node_seq_num = 1;
 uint8_t dest_seq_num = 0;
-AODV_RREQ_INFO rreq_buffer[RREQ_BUFFER_SIZE];
 
 nrk_time_t timeout_t;
 uint8_t timeout = 5;
@@ -30,48 +31,6 @@ RF_RX_INFO rfRxInfo;
 uint8_t tx_buf[RF_MAX_PAYLOAD_SIZE];
 uint8_t rx_buf[RF_MAX_PAYLOAD_SIZE];
 
-uint8_t getuint_8(){
-  char str[32];
-  int8_t i = 0;
-  uint8_t num;
-  bool isdigitstr;
-  nrk_sig_t uart_rx_signal;
-  // Get the signal for UART RX
-  uart_rx_signal=nrk_uart_rx_signal_get();
-  // Register task to wait on signal
-  nrk_signal_register(uart_rx_signal);
-
-  while(1){
-    isdigitstr = true;
-    i = 0;
-    while(1){
-      if(nrk_uart_data_ready(NRK_DEFAULT_UART)){
-        // Blocking Read that should only be called if you know data is in the buffer
-        str[i]=getchar();
-        printf("%c", str[i]);
-        if(str[i] == '\r'){
-          break;
-        }
-        
-        if(!isdigit(str[i])){
-          isdigitstr = false;
-        }
-        i++;
-      }else {
-        // Suspend until UART data arrives
-        nrk_event_wait(SIG(uart_rx_signal));
-      }
-    }
-    str[i] = '\0';
-    nrk_kprintf(PSTR("\r\n"));
-
-    if(isdigitstr == true){
-      num = atoi(str);
-      break;
-    }
-  }
-  return num;
-}
 
 void renew_routing_entry(uint8_t dest, uint8_t dest_seq_num) {
   uint8_t index = find_index(dest, dest_seq_num);
@@ -97,13 +56,13 @@ int8_t add_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, u
     routing_table[table_size].dest_seq_num = dest_seq_num;
     routing_table[table_size].hop_count = hop_count;
     routing_table[table_size].ssnr2 = 0.5 * (routing_table[table_size].ssnr2 + snr);
-
     table_size++;
   }
   return 0;
 }
 
-int8_t remove_routing_entry(){
+int8_t clean_routing_table() {
+  table_size = 0;
   return 0;
 }
 
