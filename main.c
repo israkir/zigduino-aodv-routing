@@ -299,6 +299,7 @@ void rx_task ()
           RERR = &aodvrerr;
           RREQ = NULL;
         }
+        source_broadcasting = 0;
         
         //if (WHOAMI == "source") clean_routing_table();
       
@@ -473,9 +474,9 @@ void tx_task ()
       printf("[TX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
       uint8_t len = pack_aodv_rreq(tx_buf, aodvrreq);
       // Keep sending until RREP received
-      while (RREP == NULL && RERR == NULL) {
+      source_broadcasting = 1;
+      while (source_broadcasting) {
         broadcast_rreq(tx_buf, len);
-        source_broadcasting = 1;
         nrk_wait(timeout_t);
         printf("broadcasting...");
       }
