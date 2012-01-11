@@ -191,27 +191,9 @@ void rx_task ()
               printf("[RX-DATA] sendmsg to %d\r\n", next_hop);
               repack_forward_msg(&aodvmsg, next_hop);
               RMSG = &aodvmsg;
-              /*send_packet(local_rx_buf);*/
             } else {
-              // routing information is not found in the routing table, so issue a new RREQ! might not happen at all.
-              if (aodvmsg.src == node_addr) {
-                broadcast_id++;
-                // construct RREQ message
-                aodvrreq.type = 1;
-                aodvrreq.broadcast_id = broadcast_id;
-                aodvrreq.src = aodvmsg.src;
-                aodvrreq.src_seq_num = 1; 
-                aodvrreq.dest = aodvmsg.dest;
-                aodvrreq.dest_seq_num = dest_seq_num;
-                aodvrreq.hop_count = 1;
-                // set flag for tx_task, so tx_task can broadcast!
-                RREQ = &aodvrreq;
-              }
-              /*
-              else {
-                // TODO: check about this case
-              }
-              */
+              aodvrerr.type = 4;
+              RERR = &aodvrerr;
             }
           }
         }
@@ -221,9 +203,11 @@ void rx_task ()
 
         // DEBUG PURPOSE for 3 nodes, so it will force routing through the
         // third intermediate node
-        /*if (strcmp(WHOAMI, "destination") == 0 && rfRxInfo.srcAddr == SRC_ADDR) {*/
-          /*continue;*/
-        /*}*/
+        /*
+        if (strcmp(WHOAMI, "destination") == 0 && rfRxInfo.srcAddr == SRC_ADDR) {
+          continue;
+        }
+        */
 
         // valid: this node did not received a RREQ with greater broadcast_id & source addr
         if (check_rreq_is_valid(&aodvrreq) != -1) {
@@ -294,10 +278,29 @@ void rx_task ()
         }
       } else if(type == 3) { // RERR
         unpack_aodv_rerr (local_rx_buf, &aodvrerr);
-        printf("[RX-RERR] type = %d, dest = %d, srcAddr = %d\r\n", aodvmsg.type, aodvmsg.dest, rfRxInfo.srcAddr);
+        printf("[RX-RERR] type = %d, srcAddr = %d\r\n", aodvrerr.type, rfRxInfo.srcAddr);
+
+        if (WHOAMI == "source") {
+          RERR = NULL;
+          printf("[TX-RMSG] broadcasting rreq...\r\n");
+          broadcast_id++;
+          // construct RREQ message
+          aodvrreq.type = 1;
+          aodvrreq.broadcast_id = broadcast_id;
+          aodvrreq.src = SRC_ADDR;
+          aodvrreq.src_seq_num = node_seq_num; 
+          aodvrreq.dest = DEST_ADDR;
+          aodvrreq.dest_seq_num = dest_seq_num;
+          aodvrreq.hop_count = 1;
+          // set flag for tx_task, so tx_task can broadcast!
+          RREQ = &aodvrreq;
+        }
+        else {
+          RERR = &aodvrerr;
+          RREQ = NULL;
+        }
         
-        // delete route that contains broken link from the routing table
-        // remove_routing_entry(); //Remove function not finished yet
+        //if (WHOAMI == "source") clean_routing_table();
       
       } else if(type == 4) { // RACK (special RREP)
         /*
@@ -373,7 +376,7 @@ void tx_task ()
       aodvrerr = *RERR;
       uint8_t len = pack_aodv_rerr(tx_buf, aodvrerr);
       // Keep sending until ACK received
-      while (send_rerr(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrerr.src), len) != 1) {
+      while (send_rerr(tx_buf, find_next_hop_by_ssnr2_and_hop_count(SRC_ADDR), len) != 1) {
         nrk_wait(timeout_t);
       }
       RERR = NULL;
@@ -394,9 +397,6 @@ void tx_task ()
       if (retry == MAX_RETRY) {
         retry = 0;
         aodvrerr.type = 4;
-        aodvrerr.dest = aodvrrep.dest;
-        aodvrerr.dest_seq = aodvrrep.dest_seq_num;
-        aodvrerr.src = aodvrrep.src;
         RERR = &aodvrerr;
       }
       else {
@@ -423,9 +423,6 @@ void tx_task ()
             retry = 0;
             if (WHOAMI == "intermediate") {
               aodvrerr.type = 4;
-              aodvrerr.dest = aodvrrep.dest;
-              aodvrerr.dest_seq = aodvrrep.dest_seq_num;
-              aodvrerr.src = aodvrrep.src;
               RERR = &aodvrerr;
             }
             else if (WHOAMI == "source") {
