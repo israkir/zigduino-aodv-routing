@@ -33,6 +33,7 @@ typedef struct{
   uint8_t src_seq_num;
   uint8_t dest;
   uint8_t dest_seq_num;
+  uint8_t sender_addr;
   uint8_t hop_count;
 } AODV_RREQ_INFO;
 

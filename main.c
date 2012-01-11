@@ -199,7 +199,7 @@ void rx_task ()
         }
       } else if(type == 1) { // RREQ
         unpack_aodv_rreq(local_rx_buf, &aodvrreq);
-        printf("[RX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d, srcAddr = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count, rfRxInfo.srcAddr);
+        printf("[RX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d, sender_addr = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count, aodvrreq.sender_addr);
 
         // DEBUG PURPOSE for 3 nodes, so it will force routing through the
         // third intermediate node
@@ -214,7 +214,7 @@ void rx_task ()
           printf("[RX-RREQ] check is valid - adding the request to routing entry\r\n");
           print_rreq_buffer();
           // create inverse routing entry
-          add_routing_entry(aodvrreq.src, rfRxInfo.srcAddr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi); 
+          add_routing_entry(aodvrreq.src, aodvrreq.sender_addr, aodvrreq.src_seq_num, aodvrreq.hop_count, rfRxInfo.rssi); 
           print_routing_table();
 
           // this node is the destination, so RREP!
@@ -247,6 +247,7 @@ void rx_task ()
           else {
             printf("[RX-RREQ] increase hop count\r\n");
             aodvrreq.hop_count++;
+            aodvrreq.sender_addr = node_addr;
 
             printf("[RX-RREQ] broadcast rreq message\r\n");
             RREQ = &aodvrreq;
@@ -304,6 +305,7 @@ void rx_task ()
           aodvrreq.src_seq_num = node_seq_num; 
           aodvrreq.dest = DEST_ADDR;
           aodvrreq.dest_seq_num = dest_seq_num;
+          aodvrreq.sender_addr = node_addr;
           aodvrreq.hop_count = 1;
           // set flag for tx_task, so tx_task can broadcast!
           RREQ = &aodvrreq;
@@ -452,6 +454,7 @@ void tx_task ()
               aodvrreq.src_seq_num = 1; 
               aodvrreq.dest = aodvmsg.dest;
               aodvrreq.dest_seq_num = dest_seq_num;
+              aodvrreq.sender_addr = node_addr;
               aodvrreq.hop_count = 1;
               // set flag for tx_task, so tx_task can broadcast!
               RREQ = &aodvrreq;
@@ -472,6 +475,7 @@ void tx_task ()
           aodvrreq.src_seq_num = 1; 
           aodvrreq.dest = aodvmsg.dest;
           aodvrreq.dest_seq_num = dest_seq_num;
+          aodvrreq.sender_addr = node_addr;
           aodvrreq.hop_count = 1;
           // set flag for tx_task, so tx_task can broadcast!
           RREQ = &aodvrreq;

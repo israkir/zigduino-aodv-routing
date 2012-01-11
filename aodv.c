@@ -122,7 +122,8 @@ void unpack_aodv_rreq(uint8_t* rx_buf, AODV_RREQ_INFO* aodvrreq){
   aodvrreq->src_seq_num = rx_buf[3];
   aodvrreq->dest = rx_buf[4];
   aodvrreq->dest_seq_num = rx_buf[5];
-  aodvrreq->hop_count = rx_buf[6];
+  aodvrreq->sender_addr = rx_buf[6];
+  aodvrreq->hop_count = rx_buf[7];
 }
 
 uint8_t pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq){
@@ -132,8 +133,9 @@ uint8_t pack_aodv_rreq(uint8_t* tx_buf, AODV_RREQ_INFO aodvrreq){
   tx_buf[3] = aodvrreq.src_seq_num;
   tx_buf[4] = aodvrreq.dest;
   tx_buf[5] = aodvrreq.dest_seq_num;
-  tx_buf[6] = aodvrreq.hop_count;
-  return 7;
+  tx_buf[6] = aodvrreq.sender_addr;
+  tx_buf[7] = aodvrreq.hop_count;
+  return 8;
 }
 
 void unpack_aodv_msg(uint8_t* rx_buf, AODV_MSG_INFO* aodvmsg, uint8_t* msg){
@@ -323,7 +325,7 @@ int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
   if(rreq_buffer_size < RREQ_BUFFER_SIZE){
     int i;
     for (i=0; i<table_size; i++) { 
-      if (rreq_buffer[i].src == aodvrreq->src) {
+      if ((rreq_buffer[i].src == aodvrreq->src) && (rreq_buffer[i].sender_addr == aodvrreq->sender_addr)) {
         if (rreq_buffer[i].broadcast_id < aodvrreq->broadcast_id) {
           rreq_buffer[i].type = aodvrreq->type;
           rreq_buffer[i].broadcast_id = aodvrreq->broadcast_id;
@@ -369,14 +371,13 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
   } else {
     int i;
     for (i=0; i<rreq_buffer_size; i++) {
-      if (rreq_buffer[i].src == aodvrreq->src) {
+      if ((rreq_buffer[i].src == aodvrreq->src) && (rreq_buffer[i].sender_addr == aodvrreq->sender_addr)) {
         printf("rreq_buffer[%d].broadcast_id = %d  ||  aodvrreq->broadcast_id = %d ...\r\n", i, rreq_buffer[i].broadcast_id, aodvrreq->broadcast_id);
         if (rreq_buffer[i].broadcast_id >= aodvrreq->broadcast_id) {
           printf("rejecting in second cond...\r\n");
           return -1; // reject
         } else {
-          // buffer it, if it is a valid rreq.
-          add_rreq_to_buffer(aodvrreq);
+          add_rreq_to_buffer(aodvrreq); // update
           printf("second return 0\r\n");
           return 0;
         }
