@@ -319,9 +319,25 @@ uint8_t send_rerr(uint8_t *tx_buf, uint8_t next_hop, uint8_t length){
     */
 }
 
-
 int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
-  if (rreq_buffer_size < RREQ_BUFFER_SIZE) {
+  if(rreq_buffer_size < RREQ_BUFFER_SIZE){
+    int i;
+    for (i=0; i<table_size; i++) { 
+      if (rreq_buffer[i].src == aodvrreq->src) {
+        if (rreq_buffer[i].broadcast_id < aodvrreq->broadcast_id) {
+          rreq_buffer[i].type = aodvrreq->type;
+          rreq_buffer[i].broadcast_id = aodvrreq->broadcast_id;
+          rreq_buffer[i].src = aodvrreq->src;
+          rreq_buffer[i].src_seq_num = aodvrreq->src_seq_num;
+          rreq_buffer[i].dest = aodvrreq->dest;
+          rreq_buffer[i].dest_seq_num = aodvrreq->dest_seq_num;
+          rreq_buffer[i].hop_count = aodvrreq->hop_count;
+          return 0; // updating
+        } else {
+          return -1;
+        }
+      }
+    }
     rreq_buffer[rreq_buffer_size].type = aodvrreq->type;
     rreq_buffer[rreq_buffer_size].broadcast_id = aodvrreq->broadcast_id;
     rreq_buffer[rreq_buffer_size].src = aodvrreq->src;
@@ -330,11 +346,11 @@ int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
     rreq_buffer[rreq_buffer_size].dest_seq_num = aodvrreq->dest_seq_num;
     rreq_buffer[rreq_buffer_size].hop_count = aodvrreq->hop_count;
     rreq_buffer_size++;
-    return 0;
+    return 0; // adding new entry
   } else {
     printf("ERROR: RREQ_BUFFER_SIZE exceeded!!!");
-    return -1;
   }
+  return -1;
 }
 
 int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
