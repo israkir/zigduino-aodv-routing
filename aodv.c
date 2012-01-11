@@ -10,7 +10,7 @@
 
 #define MAX_TABLE_SIZE 32
 #define MAX_LIFESPAN 10
-#define RREQ_BUFFER_SIZE 2
+#define RREQ_BUFFER_SIZE 32
 
 ROUTING_ENTRY routing_table[MAX_TABLE_SIZE];
 uint8_t node_addr;
