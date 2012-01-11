@@ -93,8 +93,8 @@ int main ()
   val = nrk_register_driver( &dev_manager_adc,ADC_DEV_MANAGER);
   if(val==NRK_ERROR) nrk_kprintf( PSTR("Failed to load my ADC driver\r\n") );
 
-  timeout_t.secs = 0;
-  timeout_t.nano_secs = 10;
+  timeout_t.secs = 1;
+  timeout_t.nano_secs = 0;
   buffer_semaphore = nrk_sem_create(1,4);
   
   // init a unique id for this node
@@ -475,10 +475,10 @@ void tx_task ()
       // Keep sending until RREP received
       while (RREP == NULL && RERR == NULL) {
         broadcast_rreq(tx_buf, len);
+        source_broadcasting = 1;
         nrk_wait(timeout_t);
         printf("broadcasting...");
       }
-      source_broadcasting = 1;
       RREQ = NULL;
     }
 
