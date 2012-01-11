@@ -354,6 +354,7 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
     int i;
     for (i=0; i<rreq_buffer_size; i++) {
       if (rreq_buffer[i].src == aodvrreq->src) {
+        printf("rreq_buffer[%d].broadcast_id = %d  ||  aodvrreq->broadcast_id = %d ...\r\n", i, rreq_buffer[i].broadcast_id, aodvrreq->broadcast_id);
         if (rreq_buffer[i].broadcast_id >= aodvrreq->broadcast_id) {
           printf("rejecting in second cond...\r\n");
           return -1; // reject
