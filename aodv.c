@@ -356,6 +356,9 @@ int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
 int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
   // check node received a RREQ with the same broadcast_id & source addr
   // if it did, return -1 (drop the rreq packet); return 0, otherwise.
+  if (node_addr == aodvrreq->src) 
+    return -1;
+  
   if (rreq_buffer_size == 0) {
     // buffer it, if it is a valid rreq.
     add_rreq_to_buffer(&aodvrreq);
@@ -363,7 +366,7 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
   } else {
     int i;
     for (i=0; i<rreq_buffer_size; i++) {
-      if (((rreq_buffer[i].broadcast_id >= aodvrreq->broadcast_id) && (rreq_buffer[i].src == aodvrreq->src)) || (node_addr == aodvrreq->src)) {
+      if ((rreq_buffer[i].broadcast_id >= aodvrreq->broadcast_id) && (rreq_buffer[i].src == aodvrreq->src)) {
         return -1;
       } else {
         // buffer it, if it is a valid rreq.
