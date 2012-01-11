@@ -472,8 +472,9 @@ void tx_task ()
       aodvrreq = *RREQ;
       printf("[TX-RREQ] type = %d, broadcast_id = %d, src = %d, src_seq_num = %d, dest = %d, dest_seq_num = %d, hop_count = %d\r\n", aodvrreq.type, aodvrreq.broadcast_id, aodvrreq.src, aodvrreq.src_seq_num, aodvrreq.dest, aodvrreq.dest_seq_num, aodvrreq.hop_count);
       uint8_t len = pack_aodv_rreq(tx_buf, aodvrreq);
-      // Keep sending until ACK received
-      while (broadcast_rreq(tx_buf, len) != 1) {
+      // Keep sending until RREP received
+      while (RREP == NULL && RERR == NULL) {
+        broadcast_rreq(tx_buf, len);
         nrk_wait(timeout_t);
         printf("broadcasting...");
       }
