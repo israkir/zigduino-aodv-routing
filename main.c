@@ -173,7 +173,7 @@ void rx_task ()
       if (type == 0) { //normal msg
         memset(rxmsg, 0, MAX_MSG_LEN);
         unpack_aodv_msg (local_rx_buf, &aodvmsg, rxmsg);
-        printf("[RX-RMSG] type = %d, src = %d, nexthop = %d, dest = %d, msg_len = %d, msg = %s\r\n", aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.msg_len, aodvmsg.msg);
+        printf("[RX-RMSG] type = %d, src = %d, nexthop = %d, dest = %d, msg_len = %d, msg = %s, srcAddr = %d\r\n", aodvmsg.type, aodvmsg.src, aodvmsg.next_hop, aodvmsg.dest, aodvmsg.msg_len, aodvmsg.msg, rfRxInfo.srcAddr);
 
         if(aodvmsg.next_hop == node_addr) {
           // this AODV msg is for this node, so process it!
@@ -262,7 +262,7 @@ void rx_task ()
         }
       } else if(type == 2) { // RREP
         unpack_aodv_rrep (local_rx_buf, &aodvrrep);
-        printf("[RX-RREP] type = %d, src = %d, dest = %d, dest_seq_num = %d, hop_count = %d, lifespan = %d\r\n", aodvrrep.type, aodvrrep.src, aodvrrep.dest, aodvrrep.dest_seq_num, aodvrrep.hop_count, aodvrrep.lifespan);
+        printf("[RX-RREP] type = %d, src = %d, dest = %d, dest_seq_num = %d, hop_count = %d, lifespan = %d, srcAddr = %d\r\n", aodvrrep.type, aodvrrep.src, aodvrrep.dest, aodvrrep.dest_seq_num, aodvrrep.hop_count, aodvrrep.lifespan, rfRxInfo.srcAddr);
 
         if ((dest_seq_num < aodvrrep.dest_seq_num) || (aodvrrep.dest_seq_num == 0)) {
           printf("[RX-RREP] check is valid - updating destination sequence number\r\n");
@@ -292,7 +292,7 @@ void rx_task ()
         }
       } else if(type == 3) { // RERR
         unpack_aodv_rerr (local_rx_buf, &aodvrerr);
-        printf("[RX-RERR] type = %d, dest = %d\r\n", aodvmsg.type, aodvmsg.dest);
+        printf("[RX-RERR] type = %d, dest = %d, srcAddr = %d\r\n", aodvmsg.type, aodvmsg.dest, rfRxInfo.srcAddr);
         
         // delete route that contains broken link from the routing table
         remove_routing_entry(); //Remove function not finished yet
