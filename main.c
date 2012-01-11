@@ -475,10 +475,18 @@ void tx_task ()
       uint8_t len = pack_aodv_rreq(tx_buf, aodvrreq);
       // Keep sending until RREP received
       source_broadcasting = 1;
-      while (source_broadcasting) {
-        broadcast_rreq(tx_buf, len);
-        nrk_wait(timeout_t);
-        printf("broadcasting...");
+      if (WHOAMI == "source") {
+        while (source_broadcasting) {
+          broadcast_rreq(tx_buf, len);
+          nrk_wait(timeout_t);
+          printf("rebroadcasting...");
+        }
+      }
+      else if {
+        if (broadcast_rreq(tx_buf, len) != -1) {
+          nrk_wait(timeout_t);
+          printf("rebroadcasting...");
+        }
       }
       RREQ = NULL;
     }
