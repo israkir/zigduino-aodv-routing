@@ -1,6 +1,9 @@
-// TODO: intermediate node data buffering
+// TODO: link breakage handling
+// TODO: multiple RREQ message before adding a route
 // snr based routing table update (implemented but haven't tested yet)
-// TODO: error handling for RX/TX ERROR and CRC Failure
+// error handling for RX/TX ERROR and CRC Failure (fixed by increasing stack
+// size)
+// intermediate node data buffering (fixed)
 
 #include <nrk.h>
 #include <include.h>
