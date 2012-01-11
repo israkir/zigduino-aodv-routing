@@ -1,5 +1,5 @@
 // TODO: intermediate node data buffering
-// TODO: snr based routing table update
+// snr based routing table update (implemented but haven't tested yet)
 // TODO: error handling for RX/TX ERROR and CRC Failure
 
 #include <nrk.h>
@@ -181,7 +181,7 @@ void rx_task ()
             memset(rxmsg, 0, aodvmsg.msg_len);
           } else {
             // this node is not destination, so send it to neighbor
-            if((next_hop = find_next_hop(aodvmsg.dest)) != 0){
+            if((next_hop = find_next_hop_by_ssnr2_and_hop_count(aodvmsg.dest)) != 0){
               printf("[RX-DATA] sendmsg to %d\r\n", next_hop);
               repack_forward_msg(local_rx_buf, aodvmsg, next_hop);
               RMSG = &aodvmsg;
@@ -227,7 +227,7 @@ void rx_task ()
           print_routing_table();
 
           // this node neighbor of destination, so RREP!
-          if ((aodvrreq.dest == find_next_hop(aodvrreq.dest)) || aodvrreq.dest == node_addr) {
+          if ((aodvrreq.dest == find_next_hop_by_ssnr2_and_hop_count(aodvrreq.dest)) || aodvrreq.dest == node_addr) {
             printf("[RX-RREQ] this node is either destination or neighbor of the destination.\r\n");
             if ((dest_seq_num < aodvrreq.dest_seq_num) || (aodvrreq.dest_seq_num == 0)) {
               // update destination sequence number
@@ -369,7 +369,7 @@ void tx_task ()
       }
       aodvrrep = *RREP;
       uint8_t len = pack_aodv_rrep(tx_buf, aodvrrep);
-      send_rrep(tx_buf, find_next_hop(aodvrrep.src), len);
+      send_rrep(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrrep.src), len);
       RREP = NULL;
     }
 
@@ -377,7 +377,7 @@ void tx_task ()
       printf("[TX-RMSG] inside the condition.\r\n");
       aodvmsg = *RMSG;  
       if (!source_broadcasting || WHOAMI != "source") {
-        if((aodvmsg.next_hop = find_next_hop(aodvmsg.dest)) != 0){
+        if((aodvmsg.next_hop = find_next_hop_by_ssnr2_and_hop_count(aodvmsg.dest)) != 0){
           uint8_t len = pack_aodv_msg(tx_buf, aodvmsg);
           printf("[TX-RMSG] txpacket type = %d, src = %d, next_hop = %d, dest = %d\r\n", 
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
@@ -419,7 +419,7 @@ void tx_task ()
       printf("[TX-RERR] inside the condition.\r\n");
       aodvrerr = *RERR;
       uint8_t len = pack_aodv_rerr(tx_buf, aodvrerr);
-      send_rerr(tx_buf, find_next_hop(aodvrerr.src), len);
+      send_rerr(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrerr.src), len);
       RERR = NULL;
     }
 

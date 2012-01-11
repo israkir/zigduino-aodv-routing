@@ -77,7 +77,6 @@ void renew_routing_entry(uint8_t dest, uint8_t dest_seq_num) {
   uint8_t index = find_index(dest, dest_seq_num);
   if (index > -1) {
     routing_table[index].lifespan = MAX_LIFESPAN;
-    /*routing_table[index].ssnr2 = 0.5 * (routing_table[table_size].ssnr2 + snr);*/
   }
 }
 
@@ -97,8 +96,6 @@ int8_t add_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, u
     routing_table[table_size].next_hop = next_hop;
     routing_table[table_size].dest_seq_num = dest_seq_num;
     routing_table[table_size].hop_count = hop_count;
-
-    // Update ssnr2
     routing_table[table_size].ssnr2 = 0.5 * (routing_table[table_size].ssnr2 + snr);
 
     table_size++;
@@ -222,6 +219,59 @@ uint8_t find_next_hop(uint8_t dest){
     }
   }
   return 0; // 0 => did not find in routing table
+}
+
+uint8_t find_next_hop_by_ssnr2(uint8_t dest){
+  uint8_t i;
+  uint8_t dest_len = 0;
+  uint8_t dests[MAX_TABLE_SIZE];
+  int ssnr = -1;
+  int entry = -1;
+  for(i = 0; i < table_size ; i++){
+    if(routing_table[i].dest == dest){
+      dests[dest_len++] = i;
+    }
+  }
+  for (i = 0; i < dest_len; i++) {
+    if (routing_table[dests[i]].ssnr2 > ssnr) {
+      entry = dests[i];
+      ssnr = routing_table[entry].ssnr2;
+    }
+  }
+  if (entry == -1)
+    return 0;
+  else
+    return routing_table[entry].next_hop; // 0 => did not find in routing table
+}
+
+uint8_t find_next_hop_by_ssnr2_and_hop_count(uint8_t dest) {
+  uint8_t i;
+  uint8_t dest_len = 0;
+  uint8_t dests[MAX_TABLE_SIZE];
+  int ssnr = -1;
+  int hop_count = -1;
+  int entry = -1;
+  for(i = 0; i < table_size ; i++){
+    if(routing_table[i].dest == dest){
+      dests[dest_len++] = i;
+    }
+  }
+  for (i = 0; i < dest_len; i++) {
+    if (routing_table[dests[i]].ssnr2 > ssnr) {
+      entry = dests[i];
+      ssnr = routing_table[entry].ssnr2;
+    }
+    if (routing_table[dests[i]].ssnr2 == ssnr) {
+      if (routing_table[dests[i]].hop_count < hop_count) {
+        entry = dests[i];
+        hop_count = routing_table[entry].hop_count;
+      }
+    }
+  }
+  if (entry == -1)
+    return 0;
+  else
+    return routing_table[entry].next_hop; // 0 => did not find in routing table
 }
 
 void broadcast_rreq(uint8_t *tx_buf, uint8_t length) {
