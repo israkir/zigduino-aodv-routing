@@ -51,14 +51,30 @@ int8_t update_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num
 
 int8_t add_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, uint8_t hop_count, int8_t snr){
   if(table_size < MAX_TABLE_SIZE){
+    int i;
+    for (i=0; i<table_size; i++) { 
+      if (routing_table[i].dest == dest) {
+        if (routing_table[i].dest_seq_num < dest_seq_num) {
+          routing_table[i].dest = dest;
+          routing_table[i].next_hop = next_hop;
+          routing_table[i].dest_seq_num = dest_seq_num;
+          routing_table[i].hop_count = hop_count;
+          routing_table[i].ssnr2 = 0.5 * (routing_table[i].ssnr2 + snr);
+          return 1; // updating
+        } else {
+          return -1;
+        }
+      }
+    }
     routing_table[table_size].dest = dest;
     routing_table[table_size].next_hop = next_hop;
     routing_table[table_size].dest_seq_num = dest_seq_num;
     routing_table[table_size].hop_count = hop_count;
     routing_table[table_size].ssnr2 = 0.5 * (routing_table[table_size].ssnr2 + snr);
     table_size++;
+    return 0; // adding new entry
   }
-  return 0;
+  return -1;
 }
 
 int8_t clean_routing_table() {
