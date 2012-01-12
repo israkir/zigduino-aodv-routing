@@ -400,9 +400,10 @@ void tx_task ()
       aodvrrep = *RREP;
       uint8_t len = pack_aodv_rrep(tx_buf, aodvrrep);
       // Keep sending until ACK received
+      retry = 0;
       while (send_rrep(tx_buf, find_next_hop_by_ssnr2_and_hop_count(aodvrrep.src), len) != 1 && retry < MAX_RETRY) {
         nrk_wait(timeout_t);
-        printf("sending rrep...");
+        printf("sending rrep...\r\n");
         retry++;
       }
       if (retry == MAX_RETRY) {
@@ -426,6 +427,7 @@ void tx_task ()
             tx_buf[0], tx_buf[1], tx_buf[2], tx_buf[3]);
           
           // Keep sending until ACK received
+          retry = 0;
           while (send_packet(tx_buf, len) != 1 && retry < MAX_RETRY) {
             nrk_wait(timeout_t);
             printf("sending message...\r\n");
