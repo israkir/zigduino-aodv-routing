@@ -400,9 +400,9 @@ int8_t check_rreq_is_valid(AODV_RREQ_INFO* aodvrreq) {
 void print_rreq_buffer() {
   int i;
   for (i=0; i<rreq_buffer_size; i++) {
-    printf("[DEBUG-rreq-buffer] type: %d | broadcast_id: %d | src: %d | src_seq_num: %d | dest: %d | dest_seq_num: %d | hop_count: %d\r\n", 
+    printf("[DEBUG-rreq-buffer] type: %d | broadcast_id: %d | src: %d | src_seq_num: %d | dest: %d | dest_seq_num: %d | sender_addr: %d | hop_count: %d\r\n", 
       rreq_buffer[i].type, rreq_buffer[i].broadcast_id, rreq_buffer[i].src, 
       rreq_buffer[i].src_seq_num, rreq_buffer[i].dest, rreq_buffer[i].dest_seq_num,
-      rreq_buffer[i].hop_count);
+      rreq_buffer[i].sender_addr, rreq_buffer[i].hop_count);
   }
 }
