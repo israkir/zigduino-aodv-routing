@@ -155,6 +155,11 @@ void rx_task ()
     while ((n = rf_polling_rx_packet ()) == 0) {}
 
     if(n == NRK_OK) {
+      if (rfRxInfo.rssi < 5) {
+        printf("[RX] some messaged skipped of low rssi\r\n");
+        continue;
+      }
+
       printf("[DEBUG-DATA] ");
       for(i=0; i<rfRxInfo.length; i++ ) printf("[%d]", rfRxInfo.pPayload[i]);
       printf("\r\n");
