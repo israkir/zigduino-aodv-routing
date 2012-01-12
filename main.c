@@ -412,6 +412,7 @@ void tx_task ()
         RERR = &aodvrerr;
       }
       else {
+        printf("[TX-RREP] successfully sent\r\n");
       }
       
       RREP = NULL;
