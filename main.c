@@ -156,7 +156,7 @@ void rx_task ()
 
     if(n == NRK_OK) {
       if (rfRxInfo.rssi < 5) {
-        printf("[RX] some messaged skipped of low rssi\r\n");
+        printf("[RX] message is skipped of low rssi\r\n");
         continue;
       }
 
@@ -190,7 +190,7 @@ void rx_task ()
               repack_forward_msg(&aodvmsg, next_hop);
               RMSG = &aodvmsg;
             } else {
-              aodvrerr.type = 4;
+              aodvrerr.type = 3;
               RERR = &aodvrerr;
             }
           }
@@ -412,7 +412,7 @@ void tx_task ()
       }
       if (retry == MAX_RETRY) {
         retry = 0;
-        aodvrerr.type = 4;
+        aodvrerr.type = 3;
         RERR = &aodvrerr;
       }
       else {
@@ -443,7 +443,7 @@ void tx_task ()
             // maximum retry has reached, routing entry not working
             if (delete_routing_entry(aodvmsg.dest, aodvmsg.next_hop) != 0) {
               if (WHOAMI == "intermediate") {
-                aodvrerr.type = 4;
+                aodvrerr.type = 3;
                 RERR = &aodvrerr;
               }
               else if (WHOAMI == "source") {
