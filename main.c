@@ -156,7 +156,7 @@ void rx_task ()
 
     if(n == NRK_OK) {
       printf("[DEBUG-DATA] ");
-      for(i=0; i<rfRxInfo.length; i++ ) printf("[%d]", rfRxInfo.pPayload[i]);
+      for(i=0; i<rfRxInfo.length; i++ ) printf("%d", rfRxInfo.pPayload[i]);
       printf("\r\n");
 
       local_rx_buf = rfRxInfo.pPayload;
