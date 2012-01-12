@@ -445,6 +445,7 @@ void tx_task ()
               if (WHOAMI == "intermediate") {
                 aodvrerr.type = 3;
                 RERR = &aodvrerr;
+                RREQ = NULL;
               }
               else if (WHOAMI == "source") {
                 // look for alternative routes
