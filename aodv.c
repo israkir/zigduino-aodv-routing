@@ -338,6 +338,7 @@ int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
           rreq_buffer[i].src_seq_num = aodvrreq->src_seq_num;
           rreq_buffer[i].dest = aodvrreq->dest;
           rreq_buffer[i].dest_seq_num = aodvrreq->dest_seq_num;
+          rreq_buffer[i].sender_addr = aodvrreq->sender_addr;
           rreq_buffer[i].hop_count = aodvrreq->hop_count;
           return 0; // updating
         } else {
@@ -351,6 +352,7 @@ int8_t add_rreq_to_buffer(AODV_RREQ_INFO* aodvrreq) {
     rreq_buffer[rreq_buffer_size].src_seq_num = aodvrreq->src_seq_num;
     rreq_buffer[rreq_buffer_size].dest = aodvrreq->dest;
     rreq_buffer[rreq_buffer_size].dest_seq_num = aodvrreq->dest_seq_num;
+    rreq_buffer[rreq_buffer_size].sender_addr = aodvrreq->sender_addr;
     rreq_buffer[rreq_buffer_size].hop_count = aodvrreq->hop_count;
     rreq_buffer_size++;
     return 0; // adding new entry
