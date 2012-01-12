@@ -75,7 +75,7 @@ uint8_t pack_aodv_rerr(uint8_t* tx_buf, AODV_RERR_INFO aodvrerr);
 void repack_forward_msg(AODV_MSG_INFO* aodvmsg, uint8_t next_hop);
 
 int8_t add_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, uint8_t hop_count, int8_t snr);
-int8_t update_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, uint8_t hop_count, int8_t snr);
+int8_t delete_routing_entry(uint8_t dest, uint8_t next_hop);
 void renew_routing_entry(uint8_t dest, uint8_t dest_seq_num);
 int8_t clean_routing_table();
 void print_routing_table();

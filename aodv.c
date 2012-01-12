@@ -39,13 +39,18 @@ void renew_routing_entry(uint8_t dest, uint8_t dest_seq_num) {
   }
 }
 
-int8_t update_routing_entry(uint8_t dest, uint8_t next_hop, uint8_t dest_seq_num, uint8_t hop_count, int8_t snr){
-  uint8_t index = find_index(dest, dest_seq_num);
-  routing_table[index].dest = dest;
-  routing_table[index].next_hop = next_hop;
-  routing_table[index].dest_seq_num = dest_seq_num;
-  routing_table[index].hop_count = hop_count;
-  routing_table[index].ssnr2 = 0.5 * (routing_table[index].ssnr2 + snr);
+int8_t delete_routing_entry(uint8_t dest, uint8_t next_hop) {
+  int i;
+  for (i = 0; i < MAX_TABLE_SIZE; i++) {
+    if (routing_table[i].dest == dest && routing_table[i].next_hop == next_hop) {
+      for (i; i < MAX_TABLE_SIZE-1; i++) {
+        routing_table[i] = routing_table[i+1];
+      }
+      table_size--;
+      break;
+    }
+  }
+  if (i == MAX_TABLE_SIZE) return -1;
   return 0;
 }
 

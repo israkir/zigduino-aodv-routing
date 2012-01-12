@@ -1,10 +1,3 @@
-// TODO: link breakage handling
-// TODO: multiple RREQ message before adding a route
-// snr based routing table update (implemented but haven't tested yet)
-// error handling for RX/TX ERROR and CRC Failure (fixed by increasing stack
-// size)
-// intermediate node data buffering (fixed)
-
 #include <nrk.h>
 #include <include.h>
 #include <ulib.h>
@@ -435,29 +428,33 @@ void tx_task ()
           // Keep sending until ACK received
           while (send_packet(tx_buf, len) != 1 && retry < MAX_RETRY) {
             nrk_wait(timeout_t);
-            printf("sending message...");
+            printf("sending message...\r\n");
             retry++;
           }
           if (retry == MAX_RETRY) {
             retry = 0;
-            if (WHOAMI == "intermediate") {
-              aodvrerr.type = 4;
-              RERR = &aodvrerr;
-            }
-            else if (WHOAMI == "source") {
-              printf("[TX-RMSG] broadcasting rreq...\r\n");
-              broadcast_id++;
-              // construct RREQ message
-              aodvrreq.type = 1;
-              aodvrreq.broadcast_id = broadcast_id;
-              aodvrreq.src = aodvmsg.src;
-              aodvrreq.src_seq_num = 1; 
-              aodvrreq.dest = aodvmsg.dest;
-              aodvrreq.dest_seq_num = dest_seq_num;
-              aodvrreq.sender_addr = node_addr;
-              aodvrreq.hop_count = 1;
-              // set flag for tx_task, so tx_task can broadcast!
-              RREQ = &aodvrreq;
+            // maximum retry has reached, routing entry not working
+            if (delete_routing_entry(aodvmsg.dest, aodvmsg.next_hop) != 0) {
+              if (WHOAMI == "intermediate") {
+                aodvrerr.type = 4;
+                RERR = &aodvrerr;
+              }
+              else if (WHOAMI == "source") {
+                // look for alternative routes
+                printf("[TX-RMSG] broadcasting rreq...\r\n");
+                broadcast_id++;
+                // construct RREQ message
+                aodvrreq.type = 1;
+                aodvrreq.broadcast_id = broadcast_id;
+                aodvrreq.src = aodvmsg.src;
+                aodvrreq.src_seq_num = 1; 
+                aodvrreq.dest = aodvmsg.dest;
+                aodvrreq.dest_seq_num = dest_seq_num;
+                aodvrreq.sender_addr = node_addr;
+                aodvrreq.hop_count = 1;
+                // set flag for tx_task, so tx_task can broadcast!
+                RREQ = &aodvrreq;
+              }
             }
           }
           else {
@@ -497,13 +494,13 @@ void tx_task ()
         while (source_broadcasting) {
           broadcast_rreq(tx_buf, len);
           nrk_wait(timeout_t);
-          printf("rebroadcasting...");
+          printf("rebroadcasting...\r\n");
         }
       }
       else {
         if (broadcast_rreq(tx_buf, len) != -1) {
           nrk_wait(timeout_t);
-          printf("rebroadcasting...");
+          printf("rebroadcasting...\r\n");
         }
       }
       RREQ = NULL;
