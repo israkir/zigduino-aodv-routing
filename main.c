@@ -290,10 +290,9 @@ void rx_task ()
         if (WHOAMI == "source") {
           RERR = NULL;
           printf("[TX-RMSG] broadcasting rreq...\r\n");
-          broadcast_id++;
           // construct RREQ message
           aodvrreq.type = 1;
-          aodvrreq.broadcast_id = broadcast_id;
+          aodvrreq.broadcast_id = ++broadcast_id;
           aodvrreq.src = SRC_ADDR;
           aodvrreq.src_seq_num = node_seq_num; 
           aodvrreq.dest = DEST_ADDR;
@@ -445,10 +444,9 @@ void tx_task ()
               else if (WHOAMI == "source") {
                 // look for alternative routes
                 printf("[TX-RMSG] broadcasting rreq...\r\n");
-                broadcast_id++;
                 // construct RREQ message
                 aodvrreq.type = 1;
-                aodvrreq.broadcast_id = broadcast_id;
+                aodvrreq.broadcast_id = ++broadcast_id;
                 aodvrreq.src = aodvmsg.src;
                 aodvrreq.src_seq_num = 1; 
                 aodvrreq.dest = aodvmsg.dest;
@@ -467,10 +465,9 @@ void tx_task ()
 
         } else {
           printf("[TX-RMSG] broadcasting rreq...\r\n");
-          broadcast_id++;
           // construct RREQ message
           aodvrreq.type = 1;
-          aodvrreq.broadcast_id = broadcast_id;
+          aodvrreq.broadcast_id = ++broadcast_id;
           aodvrreq.src = aodvmsg.src;
           aodvrreq.src_seq_num = 1; 
           aodvrreq.dest = aodvmsg.dest;
@@ -497,13 +494,16 @@ void tx_task ()
         while (source_broadcasting) {
           broadcast_rreq(tx_buf, len);
           nrk_wait(timeout_t);
-          printf("rebroadcasting...\r\n");
+          printf("[TX-RREQ] ACK not received rebroadcasting...\r\n");
+
+          ++broadcast_id;
+          aodvrreq.broadcast_id = broadcast_id;
+          tx_buf[1] = broadcast_id;
         }
       }
       else {
         if (broadcast_rreq(tx_buf, len) != -1) {
-          nrk_wait(timeout_t);
-          printf("rebroadcasting...\r\n");
+          printf("[TX-RREQ] ACK not received...\r\n");
         }
       }
       RREQ = NULL;
